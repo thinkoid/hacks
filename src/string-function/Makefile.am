@@ -2,10 +2,8 @@
 
 include $(top_srcdir)/Makefile.common
 
-noinst_LIBRARIES = libsuffix-tree.a
-libsuffix_tree_a_SOURCES = suffix-tree.cpp
-
 bin_PROGRAMS = t
 
 t_SOURCES = t.cpp
 t_LDADD = $(top_srcdir)/src/suffix-tree/libsuffix-tree.a
+

@@ -11,6 +11,7 @@ SUBDIRS =                                       \
     palindrome-index                            \
     palindromes                                 \
     reduced-string                              \
+    string-function                             \
     suffix-tree                                 \
     tandem-arrays                               \
     two-characters
