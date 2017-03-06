@@ -53,7 +53,7 @@ calculate_string_function (
 static size_t
 calculate_string_function (const suffix_tree_t& tree) {
     state_t state { };
-    do_calculate_string_function (tree, 0, state);
+    calculate_string_function (tree, 0, state);
     return state.area;
 }
 

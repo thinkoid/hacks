@@ -7,7 +7,7 @@
 
 struct suffix_tree_t {
     struct edge_t {
-        size_t beg, end, pos, len;
+        size_t beg, end, pos, len, counter;
     };
 
     struct node_t {

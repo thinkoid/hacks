@@ -84,7 +84,9 @@ make_suffix_tree (const string& text) {
                 // Active point is at explicit node:
                 //
                 auto& node = tree.nodes [active_point.node];
+
                 auto& edge = node.edges [size_cast (c)];
+                ++edge.counter;
 
                 if (edge != default_edge) {
                     //
@@ -135,7 +137,7 @@ make_suffix_tree (const string& text) {
                 }
 
                 tree.nodes.back ().edges [size_cast (next)] = edge_type {
-                    fork_pos, edge.end, edge.pos + off, npos
+                    fork_pos, edge.end, edge.pos + off, npos, 1
                 };
 
                 edge.end = fork_pos;
@@ -158,9 +160,9 @@ make_suffix_tree (const string& text) {
             // either case a new edge is required at the current node:
             //
             auto& node = tree.nodes [curr_node];
-            auto& edge = node.edges [size_cast (c)];
 
-            edge = { curr_node, 0, pos, npos };
+            auto& edge = node.edges [size_cast (c)];
+            edge = { curr_node, 0, pos, npos, 1 };
 
             if (0 == active_point.node) {
                 if (0 == active_point.off)
