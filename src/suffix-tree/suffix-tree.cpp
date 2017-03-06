@@ -180,6 +180,31 @@ make_suffix_tree (const string& text) {
     return tree;
 }
 
+////////////////////////////////////////////////////////////////////////
+
+size_t
+count_leaves (const suffix_tree_t& tree, size_t node) {
+    size_t n { };
+
+    for (const auto& edge : tree.nodes [node].edges) {
+        if (edge.len) {
+            if (0 == edge.end)
+                ++n;
+            else
+                n += count_leaves (tree, edge.end);
+        }
+    }
+
+    return n;
+}
+
+size_t
+count_leaves (const suffix_tree_t& tree) {
+    return count_leaves (tree, 0);
+}
+
+////////////////////////////////////////////////////////////////////////
+
 /* static */ string
 dot_graph_t::make_dot (const suffix_tree_t& tree, const std::string& s) {
     stringstream ss;

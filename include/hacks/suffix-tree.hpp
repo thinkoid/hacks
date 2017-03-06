@@ -41,6 +41,12 @@ operator!= (const suffix_tree_t::edge_t& lhs,
 suffix_tree_t
 make_suffix_tree (const string&);
 
+size_t
+count_leaves (const suffix_tree_t&, size_t);
+
+size_t
+count_leaves (const suffix_tree_t&);
+
 struct dot_graph_t {
     explicit dot_graph_t (const suffix_tree_t& tree, const string& s)
         : value_ (make_dot (tree, s))

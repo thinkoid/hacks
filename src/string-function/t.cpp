@@ -5,6 +5,7 @@
 #include <functional>
 #include <iostream>
 #include <map>
+#include <stack>
 #include <string>
 #include <vector>
 
@@ -12,56 +13,15 @@ using namespace std;
 
 #include <hacks/suffix-tree.hpp>
 
-using node_type = suffix_tree_t::node_t;
-using edge_type = suffix_tree_t::edge_t;
-
-using node_ref = reference_wrapper< const node_type >;
-
-inline bool
-operator< (const node_ref& lhs, const node_ref& rhs) {
-    return &lhs.get () < &rhs.get ();
-}
-
-static const auto npos = size_t (-1);
-
 struct state_t {
-    map< node_ref, size_t > leaves;
-    size_t len, maxlen;
+    size_t len, area;
 };
 
-
-
-static size_t
-count_leaves (const suffix_tree_t& tree,
-              const suffix_tree_t::node_t& node,
-              state_t& state) {
-
-    const auto ref = cref (node);
-
-    auto& n = state.leaves [ref];
-
-    if (0 == n) {
-        for (const auto& edge : node.edges) {
-            if (edge.len) {
-                if (0 == edge.end) {
-                    ++n;
-                }
-                else {
-                    n += count_leaves (tree, tree.nodes [edge.end], state);
-                }
-            }
-        }
-    }
-
-    return n;
-}
-
 static void
-recursive_visit (const suffix_tree_t& tree,
-                 const node_type& node,
-                 state_t& state) {
+calculate_string_function (
+    const suffix_tree_t& tree, size_t node, state_t& state) {
 
-    for (const auto& edge : node.edges) {
+    for (const auto& edge : tree.nodes [node].edges) {
         if (0 == edge.len)
             continue;
 
@@ -70,37 +30,36 @@ recursive_visit (const suffix_tree_t& tree,
 
             state.len += edge.len;
 
-            const auto& node = tree.nodes [edge.end];
+            {
+                const auto area = state.len * count_leaves (tree, edge.end);
 
-            //
-            // String function is the product between string length and number
-            // of occurrences in the text:
-            //
-            const auto n = state.len * count_leaves (tree, node, state);
+                if (area > state.area)
+                    state.area = area;
+            }
 
-            if (n > state.maxlen)
-                state.maxlen = n;
-
-            recursive_visit (tree, node, state);
+            calculate_string_function (tree, edge.end, state);
 
             state.len = save;
         }
         else {
             const auto n = state.len + tree.text.size () - edge.pos;
 
-            if (n > state.maxlen)
-                state.maxlen = n;
+            if (n > state.area)
+                state.area = n;
         }
     }
 }
 
+static size_t
+calculate_string_function (const suffix_tree_t& tree) {
+    state_t state { };
+    do_calculate_string_function (tree, 0, state);
+    return state.area;
+}
+
 int main (int, char** argv) {
     const auto suffix_tree = make_suffix_tree (argv [1]);
-
-    state_t state { };
-    recursive_visit (suffix_tree, suffix_tree.nodes [0], state);
-
-    cout << state.maxlen << endl;
+    cout << calculate_string_function (suffix_tree) << endl;
 
     return 0;
 }

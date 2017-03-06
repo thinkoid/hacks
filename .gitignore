@@ -42,6 +42,8 @@ lt~obsolete.m4
 megafile
 missing
 stamp-h1
+src/*/count-factors
+src/*/count-leaves
 src/*/t
 src/*/other
 src/lexicographical-merge/lexicographical-merge
