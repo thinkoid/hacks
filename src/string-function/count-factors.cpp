@@ -4,7 +4,6 @@
 
 #include <iostream>
 #include <map>
-#include <stack>
 #include <string>
 #include <vector>
 
@@ -14,39 +13,18 @@ using namespace std;
 
 static size_t
 count_distinct_factors (const suffix_tree_t& suffix_tree) {
-    stack< pair< size_t, size_t > > st;
+    size_t n = 0;
 
-    size_t i = 0, j = 0, n = 0;
+    for (const auto& node : suffix_tree.nodes) {
+        for (const auto& edge : node.edges) {
+            if (0 == edge.len)
+                continue;
 
-    while (true) {
-        while (j < suffix_tree.nodes [i].edges.size ()) {
-            const auto& edge = suffix_tree.nodes [i].edges [j];
-
-            if (edge.len) {
-                if (edge.end) {
-                    n += edge.len;
-
-                    st.emplace (i, j);
-
-                    i = edge.end;
-                    j = 0;
-
-                    continue;
-                }
-
+            if (0 == edge.end)
                 n += suffix_tree.text.size () - edge.pos;
-            }
-
-            ++j;
+            else
+                n += edge.len;
         }
-
-        if (st.empty ())
-            break;
-
-        tie (i, j) = st.top ();
-        st.pop ();
-
-        ++j;
     }
 
     return n;
