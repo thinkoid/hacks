@@ -205,6 +205,25 @@ count_leaves (const suffix_tree_t& tree) {
     return count_leaves (tree, 0);
 }
 
+size_t
+count_distinct_factors (const suffix_tree_t& suffix_tree) {
+    size_t n = 0;
+
+    for (const auto& node : suffix_tree.nodes) {
+        for (const auto& edge : node.edges) {
+            if (0 == edge.len)
+                continue;
+
+            if (0 == edge.end)
+                n += suffix_tree.text.size () - edge.pos;
+            else
+                n += edge.len;
+        }
+    }
+
+    return n;
+}
+
 ////////////////////////////////////////////////////////////////////////
 
 /* static */ string

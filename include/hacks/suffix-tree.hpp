@@ -47,6 +47,9 @@ count_leaves (const suffix_tree_t&, size_t);
 size_t
 count_leaves (const suffix_tree_t&);
 
+size_t
+count_distinct_factors (const suffix_tree_t&);
+
 struct dot_graph_t {
     explicit dot_graph_t (const suffix_tree_t& tree, const string& s)
         : value_ (make_dot (tree, s))
