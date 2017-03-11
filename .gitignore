@@ -51,3 +51,4 @@ src/longest-prefix/cyclic-rotation
 src/longest-prefix/cyclic-substring
 src/longest-prefix/longest-prefix-suffix
 src/longest-prefix/tandem-arrays
+src/string-function/count-prefixes

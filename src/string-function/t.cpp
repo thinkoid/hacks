@@ -11,6 +11,9 @@ using namespace std;
 
 #include <hacks/suffix-tree.hpp>
 
+using node_type = suffix_tree_t::node_t;
+using edge_type = suffix_tree_t::edge_t;
+
 const size_t npos = size_t (-1);
 
 struct string_view_t {
@@ -27,10 +30,10 @@ static suffix_array_t
 make_suffix_array (const suffix_tree_t& t) {
     suffix_array_t suffix_array { t.text };
 
-    stack< size_t > overlaps;
-    overlaps.emplace (0);
+    stack< size_t > overlap_stack;
+    overlap_stack.emplace (0);
 
-    stack< pair< size_t, size_t > > state;
+    stack< pair< size_t, size_t > > traversal_stack;
 
     size_t i = 0, j = 0;
 
@@ -39,15 +42,27 @@ make_suffix_array (const suffix_tree_t& t) {
             const auto& edge = t.nodes [i].edges [j];
 
             if (edge.len) {
-                //
-                // Leaf edge:
-                //
-                const auto overlap = overlaps.top ();
+                assert (t.text.size () > edge.pos);
 
+                //
+                // Overlap with previous string is at stack top:a
+                //
+                auto overlap = overlap_stack.top ();
                 assert (edge.pos >= overlap);
+
+                //
+                // Actual starting position of the substring that contains this
+                // edge is overlap characters behind:
+                //
                 const auto pos = edge.pos - overlap;
 
-                assert (t.text.size () > edge.pos);
+                //
+                // Insert all substrings that end in the current edge:
+                //
+                auto from = t.text.begin (), to = from, last = from;
+
+                advance (from, pos);
+                advance (to, pos + overlap + 1);
 
                 auto len = overlap;
 
@@ -56,25 +71,23 @@ make_suffix_array (const suffix_tree_t& t) {
                 else
                     len += t.text.size () - edge.pos;
 
-                string::const_iterator first = t.text.begin (), last = first;
-
-                advance (first, pos);
                 advance (last, pos + len);
 
-                suffix_array.array.emplace_back (string_view_t { first, last });
-
-                suffix_array.lcp.emplace_back (overlap);
+                for (; to <= last; ++to, ++overlap) {
+                    suffix_array.array.emplace_back (string_view_t { from, to });
+                    suffix_array.lcp.emplace_back (overlap);
+                }
 
                 if (edge.end) {
                     //
-                    // Intermediate edge:
+                    // Visit children of intermediate edges:
                     //
-                    state.emplace (i, j);
+                    traversal_stack.emplace (i, j);
 
                     i = edge.end;
                     j = 0;
 
-                    overlaps.emplace (overlap + edge.len);
+                    overlap_stack.emplace (overlap_stack.top () + edge.len);
 
                     continue;
                 }
@@ -83,25 +96,35 @@ make_suffix_array (const suffix_tree_t& t) {
             ++j;
         }
 
-        if (state.empty ())
+        if (traversal_stack.empty ())
             break;
 
-        tie (i, j) = state.top ();
-        state.pop ();
+        tie (i, j) = traversal_stack.top ();
+        traversal_stack.pop ();
 
         ++j;
 
-        overlaps.pop ();
+        overlap_stack.pop ();
     }
+
+    suffix_array.lcp [0] = npos;
 
     return suffix_array;
 }
 
 int main (int, char** argv) {
-    const auto arr = make_suffix_array (make_suffix_tree (argv [1]));
+    const auto suffix_tree = make_suffix_tree (argv [1]);
+    cout << dot_graph_t (suffix_tree, argv [1]).value () << endl;
 
-    for (const auto& view : arr.array)
-        cout << string (view.first, view.last) << "\n";
+    const auto suffix_array = make_suffix_array (suffix_tree);
+
+    for (size_t i = 0; i < suffix_array.array.size (); ++i) {
+        const string s (suffix_array.array [i].first,
+                        suffix_array.array [i].last);
+
+        cout << " --> " << int (suffix_array.lcp [i]) << " : " << s
+             << "\n";
+    }
 
     return 0;
 }
