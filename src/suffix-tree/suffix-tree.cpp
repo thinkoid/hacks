@@ -128,16 +128,13 @@ make_suffix_tree (const string& text) {
                 //
                 const auto fork_pos = tree.nodes.size ();
 
-                {
-                    const node_type node {
-                        edge.beg, 0U, vector< edge_type > (256U, default_edge)
-                    };
-
-                    tree.nodes.emplace_back (node);
-                }
+                tree.nodes.emplace_back (node_type {
+                    edge.beg, 0U, vector< edge_type > (256U, default_edge)
+                });
 
                 tree.nodes.back ().edges [size_cast (next)] = edge_type {
-                    fork_pos, edge.end, edge.pos + off, npos, 1
+                    fork_pos, edge.end, edge.pos + off,
+                    npos == edge.len ? npos : edge.len - off, 1
                 };
 
                 edge.end = fork_pos;
