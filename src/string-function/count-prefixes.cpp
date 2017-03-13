@@ -20,7 +20,9 @@ count_prefixes (const suffix_tree_t& t, size_t n) {
 
     const auto& node = t.nodes [n];
 
-    for (const auto& edge : node.edges) {
+    for (const auto& p : node.edges) {
+        const auto& edge = t.edges [p.second];
+
         if (0 == edge.len)
             continue;
 

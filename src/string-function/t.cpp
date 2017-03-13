@@ -39,7 +39,7 @@ make_suffix_array (const suffix_tree_t& t) {
 
     while (1) {
         while (j < t.nodes [i].edges.size ()) {
-            const auto& edge = t.nodes [i].edges [j];
+            const auto& edge = t.edges [t.nodes [i].edges [j].second];
 
             if (edge.len) {
                 assert (t.text.size () > edge.pos);

@@ -12,11 +12,13 @@ struct suffix_tree_t {
 
     struct node_t {
         size_t parent, link;
-        vector< edge_t > edges;
+        vector< pair< size_t, size_t > > edges;
     };
 
     const string text;
+
     vector< node_t > nodes;
+    vector< edge_t > edges;
 };
 
 inline ostream&
