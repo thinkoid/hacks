@@ -30,41 +30,56 @@ static suffix_array_t
 make_suffix_array (const suffix_tree_t& t) {
     suffix_array_t suffix_array { t.text };
 
+    //
+    // Stack of path length from root:
+    //
     stack< size_t > overlap_stack;
     overlap_stack.emplace (0);
 
-    stack< pair< size_t, size_t > > traversal_stack;
+    //
+    // State of node and edge traversal:
+    //
+    stack< pair< size_t, size_t > > state;
 
-    size_t i = 0, j = 0;
+    size_t i = 0, j = 0, overlap = 0;
 
     while (1) {
         while (j < t.nodes [i].edges.size ()) {
-            const auto& edge = t.edges [t.nodes [i].edges [j].second];
 
-            if (edge.len) {
-                assert (t.text.size () > edge.pos);
+            const auto& node = t.nodes [i];
+            const auto& edge = t.edges [node.edges [j].second];
 
-                //
-                // Overlap with previous string is at stack top:a
-                //
-                auto overlap = overlap_stack.top ();
+            assert (t.text.size () > edge.pos);
+
+            if (j) {
+                overlap = overlap_stack.top ();
                 assert (edge.pos >= overlap);
+            }
 
-                //
-                // Actual starting position of the substring that contains this
-                // edge is overlap characters behind:
-                //
-                const auto pos = edge.pos - overlap;
+            //
+            // Actual starting position of the substring that contains this
+            // edge is overlap characters behind:
+            //
+            const auto pos = edge.pos - overlap_stack.top ();
 
+            if (edge.end) {
                 //
-                // Insert all substrings that end in the current edge:
+                // Visit children of intermediate edges:
                 //
-                auto from = t.text.begin (), to = from, last = from;
+                state.emplace (i, j);
 
-                advance (from, pos);
-                advance (to, pos + overlap + 1);
+                i = edge.end;
+                j = 0;
 
-                auto len = overlap;
+                overlap_stack.emplace (overlap_stack.top () + edge.len);
+
+                continue;
+            }
+            else {
+                auto first = t.text.begin (), last = first;
+                advance (first, pos);
+
+                auto len = overlap_stack.top ();
 
                 if (edge.end)
                     len += edge.len;
@@ -73,34 +88,18 @@ make_suffix_array (const suffix_tree_t& t) {
 
                 advance (last, pos + len);
 
-                for (; to <= last; ++to, ++overlap) {
-                    suffix_array.array.emplace_back (string_view_t { from, to });
-                    suffix_array.lcp.emplace_back (overlap);
-                }
-
-                if (edge.end) {
-                    //
-                    // Visit children of intermediate edges:
-                    //
-                    traversal_stack.emplace (i, j);
-
-                    i = edge.end;
-                    j = 0;
-
-                    overlap_stack.emplace (overlap_stack.top () + edge.len);
-
-                    continue;
-                }
+                suffix_array.array.emplace_back (string_view_t { first, last });
+                suffix_array.lcp.emplace_back (overlap);
             }
 
             ++j;
         }
 
-        if (traversal_stack.empty ())
+        if (state.empty ())
             break;
 
-        tie (i, j) = traversal_stack.top ();
-        traversal_stack.pop ();
+        tie (i, j) = state.top ();
+        state.pop ();
 
         ++j;
 
