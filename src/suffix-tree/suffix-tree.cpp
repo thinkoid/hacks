@@ -1,12 +1,13 @@
+#include <cstddef>
 #include <cassert>
-#include <cstring>
 
 #include <algorithm>
-#include <iomanip>
 #include <iostream>
-#include <map>
-#include <memory>
+#include <numeric>
+#include <stack>
 #include <string>
+#include <sstream>
+#include <tuple>
 #include <vector>
 
 using namespace std;
@@ -261,27 +262,65 @@ make_suffix_tree (const string& text) {
 ////////////////////////////////////////////////////////////////////////
 
 size_t
-count_leaves (const suffix_tree_t& tree, size_t node) {
-    // TODO: operate on node references
-    size_t n = 0;
+count_leaves (const suffix_tree_t& t, size_t n) {
+    const auto& s = t.nodes [n].edges;
 
-    for (const auto& p : tree.nodes [node].edges) {
-        const auto& edge = tree.edges [p.second];
-
-        if (edge.len) {
-            if (0 == edge.end)
-                ++n;
-            else
-                n += count_leaves (tree, edge.end);
-        }
-    }
-
-    return n;
+    return accumulate (
+        s.begin (), s.end (), 0U,
+        [&](const auto& accum, const auto& arg) {
+            const auto& edge = t.edges [arg.second];
+            return accum + edge.end ? count_leaves (t, edge.end) : 1;
+        });
 }
 
 size_t
-count_leaves (const suffix_tree_t& tree) {
-    return count_leaves (tree, 0);
+count_leaves (const suffix_tree_t& t) {
+    return count_leaves (t, 0);
+}
+
+vector< size_t >
+count_all_leaves (const suffix_tree_t& t) {
+    vector< size_t > v (t.nodes.size (), { });
+
+    stack< tuple< size_t, size_t, size_t > > state;
+    size_t i = 0, j = 0, k = 0;
+
+    while (1) {
+        while (j < t.nodes [i].edges.size ()) {
+
+            const auto& node = t.nodes [i];
+            const auto& edge = t.edges [node.edges [j].second];
+
+            if (edge.end) {
+                state.emplace (i, j, k);
+
+                i = edge.end;
+                j = k = 0;
+
+                continue;
+            }
+            else
+                ++k;
+
+            ++j;
+        }
+
+        v [i] = k;
+
+        if (state.empty ())
+            break;
+
+        const size_t save = k;
+
+        tie (i, j, k) = state.top ();
+        state.pop ();
+
+        ++j;
+
+        k += save;
+    }
+
+    return v;
 }
 
 size_t
@@ -308,7 +347,7 @@ count_distinct_factors (const suffix_tree_t& tree) {
 ////////////////////////////////////////////////////////////////////////
 
 /* static */ string
-dot_graph_t::make_dot (const suffix_tree_t& t, const std::string& s) {
+dot_graph_t::make_dot (const suffix_tree_t& t) {
     stringstream ss;
 
     ss << "#+BEGIN_SRC dot :file suffix-t.png :cmdline -Kdot -Tpng\n";

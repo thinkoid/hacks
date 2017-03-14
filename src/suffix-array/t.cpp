@@ -14,18 +14,18 @@ using namespace std;
 #include <hacks/suffix-array.hpp>
 
 int main (int, char** argv) {
-    const auto suffix_tree = make_suffix_tree (argv [1]);
-    cout << dot_graph_t (suffix_tree, argv [1]).value () << endl;
+    const auto t = make_suffix_tree (argv [1]);
+    cout << dot_graph_t (t).value () << endl;
 
-    const auto suffix_array = make_suffix_array (suffix_tree);
+    const auto arr = make_suffix_array (t);
 
-    for (size_t i = 0; i < suffix_array.array.size (); ++i) {
-        const string s (suffix_array.array [i].first,
-                        suffix_array.array [i].last);
+    for (size_t i = 0; i < arr.array.size (); ++i) {
+        const string s (arr.array [i].first, arr.array [i].last);
 
-        cout << " --> " << int (suffix_array.lcp [i]) << " : " << s
-             << "\n";
+        cout << " --> " << int (arr.lcp [i]) << " : " << s << "\n";
     }
+
+    cout << endl;
 
     return 0;
 }

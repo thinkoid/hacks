@@ -3,6 +3,7 @@
 
 #include <iomanip>
 #include <iostream>
+#include <iterator>
 #include <map>
 #include <memory>
 #include <string>
@@ -15,8 +16,13 @@ using namespace std;
 int main (int, char** argv) {
     assert (argv [1] && argv [1][0]);
 
-    suffix_tree_t tree = make_suffix_tree (argv [1]);
-    cout << dot_graph_t (tree, argv [1]).value () << endl;
+    const auto t = make_suffix_tree (argv [1]);
+    cout << dot_graph_t (t).value () << endl;
+
+    const auto v = count_all_leaves (t);
+
+    copy (v.begin (), v.end (), ostream_iterator< size_t > (cout, " "));
+    cout << endl;
 
     return 0;
 }
