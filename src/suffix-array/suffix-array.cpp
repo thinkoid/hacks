@@ -1,32 +1,20 @@
-// -*- mode: c++ -*-
-
 #include <cassert>
+#include <cstring>
 
 #include <functional>
 #include <iostream>
 #include <stack>
+#include <string>
 #include <vector>
 
 using namespace std;
 
 #include <hacks/suffix-tree.hpp>
+#include <hacks/suffix-array.hpp>
 
-using node_type = suffix_tree_t::node_t;
-using edge_type = suffix_tree_t::edge_t;
+static const size_t npos = size_t (-1);
 
-const size_t npos = size_t (-1);
-
-struct string_view_t {
-    string::const_iterator first, last;
-};
-
-struct suffix_array_t {
-    const string text;
-    vector< string_view_t > array;
-    vector< size_t > lcp;
-};
-
-static suffix_array_t
+suffix_array_t
 make_suffix_array (const suffix_tree_t& t) {
     suffix_array_t suffix_array { t.text };
 
@@ -109,21 +97,4 @@ make_suffix_array (const suffix_tree_t& t) {
     suffix_array.lcp [0] = npos;
 
     return suffix_array;
-}
-
-int main (int, char** argv) {
-    const auto suffix_tree = make_suffix_tree (argv [1]);
-    cout << dot_graph_t (suffix_tree, argv [1]).value () << endl;
-
-    const auto suffix_array = make_suffix_array (suffix_tree);
-
-    for (size_t i = 0; i < suffix_array.array.size (); ++i) {
-        const string s (suffix_array.array [i].first,
-                        suffix_array.array [i].last);
-
-        cout << " --> " << int (suffix_array.lcp [i]) << " : " << s
-             << "\n";
-    }
-
-    return 0;
 }

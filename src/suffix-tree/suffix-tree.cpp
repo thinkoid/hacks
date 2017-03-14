@@ -179,8 +179,7 @@ make_suffix_tree (const string& text) {
 
                         t.edges.emplace_back (edge_type {
                             node_pos, edge.end, edge.pos + a.off,
-                            edge.len == npos ? npos : edge.len - a.off,
-                            1
+                            edge.len == npos ? npos : edge.len - a.off
                         });
                     }
 
@@ -221,7 +220,7 @@ make_suffix_tree (const string& text) {
                 const auto edge_pos = t.edges.size ();
 
                 t.edges.emplace_back (
-                    edge_type { curr_node, 0, pos, npos, 1 });
+                    edge_type { curr_node, 0, pos, npos });
 
                 auto& node = t.nodes [curr_node];
 

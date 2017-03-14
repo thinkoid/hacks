@@ -39,6 +39,9 @@ AC_CONFIG_FILES(Makefile)
 AC_CONFIG_FILES(include/Makefile)
 AC_CONFIG_FILES(src/Makefile)
 
+AC_CONFIG_FILES([src/suffix-tree/Makefile])
+AC_CONFIG_FILES([src/suffix-array/Makefile])
+
 AC_CONFIG_FILES([src/cyclic-rotation/Makefile])
 AC_CONFIG_FILES([src/cyclic-substring/Makefile])
 AC_CONFIG_FILES([src/knuth-morris-pratt/Makefile])
@@ -50,7 +53,6 @@ AC_CONFIG_FILES([src/palindrome-index/Makefile])
 AC_CONFIG_FILES([src/palindromes/Makefile])
 AC_CONFIG_FILES([src/reduced-string/Makefile])
 AC_CONFIG_FILES([src/string-function/Makefile])
-AC_CONFIG_FILES([src/suffix-tree/Makefile])
 AC_CONFIG_FILES([src/tandem-arrays/Makefile])
 AC_CONFIG_FILES([src/two-characters/Makefile])
 

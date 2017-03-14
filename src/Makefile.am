@@ -1,6 +1,8 @@
 # -*- mode: makefile -*-
 
 SUBDIRS =                                       \
+    suffix-tree                                 \
+    suffix-array                                \
     cyclic-rotation                             \
     cyclic-substring                            \
     knuth-morris-pratt                          \
@@ -11,7 +13,6 @@ SUBDIRS =                                       \
     palindrome-index                            \
     palindromes                                 \
     reduced-string                              \
-    suffix-tree                                 \
     string-function                             \
     tandem-arrays                               \
     two-characters
