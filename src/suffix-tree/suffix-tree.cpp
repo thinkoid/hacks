@@ -52,43 +52,43 @@ edge_index (const node_type& node, size_t c) {
 }
 
 static active_point_t
-canonize (const suffix_tree_t& tree, active_point_t active_point) {
-    const auto& text = tree.text;
+canonize (const suffix_tree_t& t, active_point_t a) {
+    const auto& text = t.text;
 
-    while (active_point.off) {
+    while (a.off) {
         //
         // The edge information in the active point data is valid only with a
         // non-zero offset, i.e., a zero offset means the active point is at an
         // internal node:
         //
-        const auto& node = tree.nodes [active_point.node];
-        const auto& edge = tree.edges [active_point.edge];
+        const auto& node = t.nodes [a.node];
+        const auto& edge = t.edges [a.edge];
 
-        if (active_point.off < edge.len)
+        if (a.off < edge.len)
             break;
 
-        active_point.off -= edge.len;
+        a.off -= edge.len;
 
         assert (edge.end);
-        active_point.node = edge.end;
+        a.node = edge.end;
 
-        if (active_point.off) {
+        if (a.off) {
             assert (text.size () > edge.pos + edge.len);
             const auto c = text [edge.pos + edge.len];
 
-            const auto& node = tree.nodes [active_point.node];
+            const auto& node = t.nodes [a.node];
 
             const auto result = edge_index (node, size_cast (c));
             assert (result.second);
 
-            active_point.edge = result.first;
+            a.edge = result.first;
         }
     }
 
-    if (0 == active_point.off)
-        active_point.edge = 0;
+    if (0 == a.off)
+        a.edge = 0;
 
-    return active_point;
+    return a;
 }
 
 static active_point_t
@@ -324,18 +324,18 @@ count_all_leaves (const suffix_tree_t& t) {
 }
 
 size_t
-count_distinct_factors (const suffix_tree_t& tree) {
+count_distinct_factors (const suffix_tree_t& t) {
     size_t n = 0;
 
-    for (const auto& node : tree.nodes) {
+    for (const auto& node : t.nodes) {
         for (const auto& p : node.edges) {
-            const auto& edge = tree.edges [p.second];
+            const auto& edge = t.edges [p.second];
 
             if (0 == edge.len)
                 continue;
 
             if (0 == edge.end)
-                n += tree.text.size () - edge.pos;
+                n += t.text.size () - edge.pos;
             else
                 n += edge.len;
         }

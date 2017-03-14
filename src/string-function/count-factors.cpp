@@ -12,8 +12,8 @@ using namespace std;
 #include <hacks/suffix-tree.hpp>
 
 int main (int, char** argv) {
-    const auto suffix_tree = make_suffix_tree (argv [1]);
-    cout << count_distinct_factors (suffix_tree) << endl;
+    cout << count_distinct_factors (make_suffix_tree (argv [1]))
+         << endl;
 
     return 0;
 }

@@ -15,7 +15,8 @@ using namespace std;
 using state_type = map< size_t, size_t >;
 
 int main (int, char** argv) {
-    const auto suffix_tree = make_suffix_tree (argv [1]);
-    cout << count_leaves (suffix_tree) << endl;
+    cout << count_leaves (make_suffix_tree (argv [1]))
+         << endl;
+
     return 0;
 }

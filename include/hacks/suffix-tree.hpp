@@ -56,8 +56,8 @@ size_t
 count_distinct_factors (const suffix_tree_t&);
 
 struct dot_graph_t {
-    explicit dot_graph_t (const suffix_tree_t& tree)
-        : value_ (make_dot (tree))
+    explicit dot_graph_t (const suffix_tree_t& t)
+        : value_ (make_dot (t))
         { }
 
     const string& value () const {
