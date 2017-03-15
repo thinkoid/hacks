@@ -11,16 +11,57 @@ using namespace std;
 
 #include <hacks/suffix-tree.hpp>
 
-int main (int, char** argv) {
-    assert (argv [1] && argv [1][0]);
+const vector< string > test_data {
+    "A",
+    "AA",
+    "AAA",
+    "AAAAAAA",
+    "AAAAAAAAAAAA",
+    "ABCABC",
+    "ABCABCABCABC",
+    "ABCABCABCABCABCABCABCABC",
+    "ABCATBC",
+    "ABCABCABTCABC",
+    "ABCABCABCABCABCABTCABCABC"
+};
 
-    const auto t = make_suffix_tree (argv [1]);
-    cout << dot_graph_t (t).value () << endl;
+#include <benchmark/benchmark.h>
 
+static void
+BM_tree_construction (benchmark::State& state) {
+    const string s = test_data [state.range (0)] + "$";
+
+    while (state.KeepRunning ())
+        benchmark::DoNotOptimize (make_suffix_tree (s));
+}
+
+BENCHMARK (BM_tree_construction)->DenseRange (0, test_data.size () - 1);
+
+static void
+BM_leaf_counting (benchmark::State& state) {
+    const string s = test_data [state.range (0)] + "$";
+    const auto t = make_suffix_tree (s);
+
+    while (state.KeepRunning ())
+        benchmark::DoNotOptimize (count_all_leaves (t));
+}
+
+BENCHMARK (BM_leaf_counting)->DenseRange (0, test_data.size () - 1);
+
+static void
+BM_substring_matching (benchmark::State& state) {
+    const string s = test_data [state.range (0)] + "$";
+
+    const auto t = make_suffix_tree (s);
     const auto v = count_all_leaves (t);
 
-    copy (v.begin (), v.end (), ostream_iterator< size_t > (cout, " "));
-    cout << endl;
-
-    return 0;
+    while (state.KeepRunning ()) {
+        benchmark::DoNotOptimize (match (t, "AAA"));
+        benchmark::DoNotOptimize (match (t, "ABC"));
+        benchmark::DoNotOptimize (match (t, "BTC"));
+    }
 }
+
+BENCHMARK (BM_substring_matching)->DenseRange (0, test_data.size () - 1);
+
+BENCHMARK_MAIN ();

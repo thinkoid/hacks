@@ -105,9 +105,7 @@ traverse_suffix_border (const suffix_tree_t& t, active_point_t a) {
     const auto c = text [edges [a.edge].pos];
 
     const auto result = edge_index (nodes [a.node], size_cast (c));
-    assert (result.second);
-
-    a.edge = result.first;
+    a.edge = result.second ? result.first : 0;
 
     return move (a);
 }
