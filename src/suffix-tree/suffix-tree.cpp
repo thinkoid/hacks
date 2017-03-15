@@ -30,6 +30,8 @@ struct active_point_t {
 
 const auto default_active_point = active_point_t { };
 
+static const size_t npos = size_t (-1);
+
 ////////////////////////////////////////////////////////////////////////
 
 const auto edge_cmp = [](const auto& lhs, const auto& rhs) {
@@ -342,6 +344,84 @@ count_distinct_factors (const suffix_tree_t& t) {
     }
 
     return n;
+}
+
+vector< size_t >
+match (const suffix_tree_t& t, const string& s) {
+    vector< size_t > path;
+
+    size_t pos = 0;
+
+    for (auto iter = s.begin (), last = s.end (); iter != last;) {
+        //
+        // Record node path:
+        //
+        path.emplace_back (pos);
+
+        //
+        // Find the matching edge:
+        //
+        const auto result = edge_index (t.nodes [pos], *iter);
+
+        if (!result.second) {
+            path.clear ();
+            break;
+        }
+
+        //
+        // Match alongside the edge:
+        //
+        const auto& edge = t.edges [result.first];
+
+        auto iter2 = t.text.begin ();
+        advance (iter2, edge.pos);
+
+        auto last2 = iter2;
+
+        if (edge.end)
+            advance (last2, edge.len);
+        else
+            last2 = t.text.end ();
+
+        for (; iter != last && iter2 != last2 && *iter == *iter2;
+             ++iter, ++iter2) ;
+
+        if (iter == last) {
+            //
+            // Matched the whole string:
+            //
+            path.emplace_back (edge.end);
+        }
+        else {
+            if (iter2 == last2) {
+                //
+                // Matched the whole edge:
+                //
+                if (edge.end) {
+                    //
+                    // Continue from the end of the edge:
+                    //
+                    pos = edge.end;
+                }
+                else {
+                    //
+                    // Mismatch, the tree ends here:
+                    //
+                    path.clear ();
+                    break;
+                }
+            }
+            else {
+                //
+                // Mismatch on the current edge:
+                //
+                path.clear ();
+                break;
+            }
+        }
+    }
+
+    return path;
 }
 
 ////////////////////////////////////////////////////////////////////////

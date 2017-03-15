@@ -1,11 +1,9 @@
 #include <cassert>
 #include <cstring>
 
-#include <iomanip>
+#include <algorithm>
 #include <iostream>
 #include <iterator>
-#include <map>
-#include <memory>
 #include <string>
 #include <vector>
 

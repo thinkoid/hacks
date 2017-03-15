@@ -3,6 +3,7 @@
 SUBDIRS =                                       \
     suffix-tree                                 \
     suffix-array                                \
+    count-occurrences                           \
     cyclic-rotation                             \
     cyclic-substring                            \
     knuth-morris-pratt                          \

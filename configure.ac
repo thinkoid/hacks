@@ -42,6 +42,7 @@ AC_CONFIG_FILES(src/Makefile)
 AC_CONFIG_FILES([src/suffix-tree/Makefile])
 AC_CONFIG_FILES([src/suffix-array/Makefile])
 
+AC_CONFIG_FILES([src/count-occurrences/Makefile])
 AC_CONFIG_FILES([src/cyclic-rotation/Makefile])
 AC_CONFIG_FILES([src/cyclic-substring/Makefile])
 AC_CONFIG_FILES([src/knuth-morris-pratt/Makefile])
