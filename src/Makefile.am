@@ -13,6 +13,7 @@ SUBDIRS =                                       \
     make-anagram                                \
     palindrome-index                            \
     palindromes                                 \
+    perf                                        \
     reduced-string                              \
     string-function                             \
     tandem-arrays                               \
