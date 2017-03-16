@@ -6,6 +6,7 @@
 *.msi
 *.o
 *.org
+*.out
 *.png
 .deps
 .dirstamp

@@ -40,14 +40,14 @@ const auto edge_cmp = [](const auto& lhs, const auto& rhs) {
 
 static inline pair< size_t, bool >
 edge_index (const node_type& node, size_t c) {
-    const pair< size_t, size_t > value { c, 0 };
-
-    const auto iter = lower_bound (
-        node.edges.begin (), node.edges.end (), value, edge_cmp);
+    const auto iter = find_if (
+        node.edges.begin (), node.edges.end (), [&](const auto& arg) {
+            return c == arg.first;
+        });
 
     pair< size_t, bool > result { };
 
-    if (iter != node.edges.end () && c == iter->first)
+    if (iter != node.edges.end ())
         result = pair< size_t, bool > { iter->second, true };
 
     return result;
@@ -189,9 +189,7 @@ make_suffix_tree (const string& text) {
                         auto& edge = t.edges [a.edge];
 
                         const auto next = text [edge.pos + a.off];
-
                         node.edges.emplace_back (size_cast (next), edge_pos);
-                        sort (node.edges.begin (), node.edges.end (), edge_cmp);
 
                         //
                         // Cut active edge:
@@ -224,9 +222,7 @@ make_suffix_tree (const string& text) {
                     edge_type { curr_node, 0, pos, npos });
 
                 auto& node = t.nodes [curr_node];
-
                 node.edges.emplace_back (size_cast (c), edge_pos);
-                sort (node.edges.begin (), node.edges.end (), edge_cmp);
             }
 
             if (0 == a.node) {

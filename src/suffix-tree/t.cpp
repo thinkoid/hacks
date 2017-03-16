@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <iostream>
 #include <iterator>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -27,9 +28,25 @@ const vector< string > test_data {
 
 #include <benchmark/benchmark.h>
 
+static string
+make_label (const string& s) {
+    stringstream ss;
+
+    if (s.size () > 6) {
+        ss << s.substr (0, 6) << "...";
+        ss << "(" << s.size () << ")";
+    }
+    else
+        ss << s;
+
+    return ss.str ();
+}
+
 static void
 BM_tree_construction (benchmark::State& state) {
     const string s = test_data [state.range (0)] + "$";
+
+    state.SetLabel (make_label (s));
 
     while (state.KeepRunning ())
         benchmark::DoNotOptimize (make_suffix_tree (s));
@@ -41,6 +58,8 @@ static void
 BM_leaf_counting (benchmark::State& state) {
     const string s = test_data [state.range (0)] + "$";
     const auto t = make_suffix_tree (s);
+
+    state.SetLabel (make_label (s));
 
     while (state.KeepRunning ())
         benchmark::DoNotOptimize (count_all_leaves (t));
@@ -54,6 +73,8 @@ BM_substring_matching (benchmark::State& state) {
 
     const auto t = make_suffix_tree (s);
     const auto v = count_all_leaves (t);
+
+    state.SetLabel (make_label (s));
 
     while (state.KeepRunning ()) {
         benchmark::DoNotOptimize (match (t, "AAA"));
