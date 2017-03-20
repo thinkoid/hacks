@@ -3,6 +3,7 @@
 SUBDIRS =                                       \
     suffix-tree                                 \
     suffix-array                                \
+    aho-corasick                                \
     count-occurrences                           \
     cyclic-rotation                             \
     cyclic-substring                            \
