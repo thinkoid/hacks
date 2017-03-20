@@ -45,7 +45,7 @@ private:
         //
         int_type states = 1, word_index = 0;
 
-        for (auto iter = first; iter != last; ++iter) {
+        for (auto iter = first; iter != last; ++iter, ++word_index) {
             const auto& word = *iter;
 
             int_type state = 0;
@@ -61,7 +61,7 @@ private:
                 state = goto_ [index];
             }
 
-            output_ [state].emplace (word_index++);
+            output_ [state].emplace (word_index);
         }
 
         for (size_t c = 0; c < alphabet_type::size (); ++c)
