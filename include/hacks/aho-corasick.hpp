@@ -4,6 +4,7 @@
 #define HACKS_AHO_CORASICK_HPP
 
 #include <hacks/defs.hpp>
+#include <hacks/alphabet.hpp>
 
 #include <iterator>
 #include <map>
@@ -12,28 +13,6 @@
 #include <set>
 #include <string>
 #include <vector>
-
-template< typename T, typename U = char_traits< T > >
-struct english_lowercase_alphabet_t {
-    using traits_type = U;
-
-    using   char_type = typename traits_type::char_type;
-    using    int_type = typename traits_type::int_type;
-    using    off_type = typename traits_type::off_type;
-    using    pos_type = typename traits_type::pos_type;
-    using   size_type = typename make_unsigned< off_type >::type;
-
-    static constexpr char_type (min) () { return char_type ('a'); }
-    static constexpr char_type (max) () { return char_type ('z'); }
-
-    static constexpr size_type (size) () { return (max) () - (min) () + 1; }
-
-    static off_type ordinal (char_type c) {
-        const auto i = traits_type::to_int_type (c);
-        assert ((min) () <= i && i <= (max) ());
-        return i - traits_type::to_int_type ((min) ());
-    }
-};
 
 //
 // Alfred V. Aho and Margaret J. Corasick. 1975. Efficient string matching: an
