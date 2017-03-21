@@ -29,6 +29,23 @@ struct aho_corasick_t {
     using size_type = typename alphabet_type::size_type;
 
 private:
+    int_type& transition (int_type state, char_type c) {
+        static constexpr auto n = alphabet_type::size ();
+        return goto_ [state * n + alphabet_type::ordinal (c)];
+    }
+
+    const int_type& transition (int_type state, char_type c) const {
+        return const_cast< aho_corasick_t* > (this)->transition (state, c);
+    }
+
+    void make_transition (int_type from, char_type c, int_type to) {
+        transition (from, c) = to;
+    }
+
+    void make_output (int_type state, int_type word_index) {
+        output_ [state].emplace (word_index);
+    }
+
     template< typename Iterator >
     void make_goto_function (Iterator first, Iterator last) {
         const size_t len = accumulate (
@@ -39,10 +56,6 @@ private:
         failure_.resize (len, -1);
         goto_.resize (alphabet_type::size () * len, -1);
 
-        //
-        // Compute the goto function (a word trie) and part of the output
-        // function:
-        //
         int_type states = 1, word_index = 0;
 
         for (auto iter = first; iter != last; ++iter, ++word_index) {
@@ -51,22 +64,26 @@ private:
             int_type state = 0;
 
             for (const auto c : word) {
-                const auto index =
-                    alphabet_type::size () * state +
-                    alphabet_type::ordinal (c);
+                if (transition (state, c) == -1)
+                    make_transition (state, c, states++);
 
-                if (goto_ [index] == -1)
-                    goto_ [index] = states++;
-
-                state = goto_ [index];
+                state = transition (state, c);
             }
 
-            output_ [state].emplace (word_index);
+            make_output (state, word_index);
         }
 
         for (size_t c = 0; c < alphabet_type::size (); ++c)
             if (goto_ [c] == -1)
                 goto_ [c] = 0;
+    }
+
+    bool fails (int_type state, char_type c) const {
+        return transition (state, c) == -1;
+    }
+
+    void make_failure (int_type state, char_type c, int_type to) {
+        failure_ [transition (state, c)] = to;
     }
 
     void make_failure_function () {
@@ -83,46 +100,28 @@ private:
             const auto state = q.front ();
             q.pop ();
 
-            for (size_t c = 0; c < alphabet_type::size (); ++c) {
-                const auto state_index = state * alphabet_type::size () + c;
-
-                if (goto_ [state_index] != -1) {
-                    //
-                    // If g(r,a) = fail ... :
-                    //
+            for (const auto c : make_char_range (a_.begin (), a_.end ())) {
+                if (transition (state, c) != -1) {
                     int failure = failure_ [state];
 
-                    while (goto_ [failure * alphabet_type::size () + c] == -1)
-                        //
-                        // Walk the uninterrupted chain of failure states, until
-                        // g(state,a) != failure:
-                        //
+                    while (fails (failure, c))
                         failure = failure_ [failure];
 
-                    //
-                    // Set f(s) = g(state,a):
-                    //
-                    failure = goto_ [failure * alphabet_type::size () + c];
-                    failure_ [goto_ [state_index]] = failure;
+                    failure = transition (failure, c);
+                    make_failure (state, c, failure);
 
-                    //
-                    // When f(s) = s', merge outputs of s and s':
-                    //
                     {
                         auto iter = output_.find (failure);
 
                         if (iter != output_.end ()) {
                             const auto& f = iter->second;
 
-                            const auto s = goto_ [state_index];
+                            const auto s = transition (state, c);
                             output_ [s].insert (f.begin (), f.end ());
                         }
                     }
 
-                    //
-                    // Queue the state for processing in level d+1:
-                    //
-                    q.push (goto_ [state_index]);
+                    q.push (transition (state, c));
                 }
             }
         }
@@ -130,7 +129,9 @@ private:
 
 public:
     template< typename Iterator >
-    aho_corasick_t (Iterator first, Iterator last) {
+    aho_corasick_t (
+        Iterator first, Iterator last, const alphabet_type& a = alphabet_type ())
+        : a_ (a) {
         make_goto_function (first, last);
         make_failure_function ();
     }
@@ -144,12 +145,12 @@ public:
         for (typename alphabet_type::off_type off = 0; iter != last;
              ++off, ++iter) {
 
-            const auto c = alphabet_type::ordinal (*iter);
+            const auto c = *iter;
 
-            while (goto_ [state * n + c] == -1)
+            while (transition (state, c) == -1)
                 state = failure_ [state];
 
-            state = goto_ [state * n + c];
+            state = transition (state, c);
 
             auto iter2 = output_.find (state);
 
@@ -173,12 +174,12 @@ public:
         for (typename alphabet_type::off_type off = 0; iter != last;
              ++off, ++iter) {
 
-            const auto c = alphabet_type::ordinal (*iter);
+            const auto c = *iter;
 
-            while (goto_ [state * n + c] == -1)
+            while (transition (state, c) == -1)
                 state = failure_ [state];
 
-            state = goto_ [state * n + c];
+            state = transition (state, c);
 
             auto iter2 = output_.find (state);
 
@@ -194,6 +195,7 @@ public:
 private:
     vector< int_type > failure_, goto_;
     map< int_type, set< int_type > > output_;
+    alphabet_type a_;
 };
 
 #endif // HACKS_AHO_CORASICK_HPP
