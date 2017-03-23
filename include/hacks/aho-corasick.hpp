@@ -29,99 +29,98 @@ struct aho_corasick_t {
     using size_type = typename alphabet_type::size_type;
 
 private:
-    int_type& transition (int_type state, char_type c) {
-        static constexpr auto n = alphabet_type::size ();
-        return goto_ [state * n + alphabet_type::ordinal (c)];
-    }
+    static constexpr size_type npos = size_type (-1);
 
-    const int_type& transition (int_type state, char_type c) const {
-        return const_cast< aho_corasick_t* > (this)->transition (state, c);
-    }
-
-    void make_transition (int_type from, char_type c, int_type to) {
-        transition (from, c) = to;
-    }
-
-    void make_output (int_type state, int_type word_index) {
-        output_ [state].emplace (word_index);
-    }
-
+private:
     template< typename Iterator >
-    void make_goto_function (Iterator first, Iterator last) {
-        const size_t len = accumulate (
-            first, last, 0U, [](size_t n, const auto& word) {
-                return n + word.size ();
-            });
+    void make_transition_function (Iterator first, Iterator last) {
+        size_type states = 1, word_index = 0;
 
-        failure_.resize (len, -1);
-        goto_.resize (alphabet_type::size () * len, -1);
-
-        int_type states = 1, word_index = 0;
+        g_.resize (states);
 
         for (auto iter = first; iter != last; ++iter, ++word_index) {
             const auto& word = *iter;
 
-            int_type state = 0;
+            size_type state = 0;
 
             for (const auto c : word) {
-                if (transition (state, c) == -1)
-                    make_transition (state, c, states++);
+                const auto i = alphabet_type::ordinal (c);
 
-                state = transition (state, c);
+                assert (state < g_.size ());
+                auto& t = g_ [state];
+
+                auto iter = find_if (
+                    t.begin (), t.end (), [&](const auto& arg) {
+                        return i == arg.first;
+                    });
+
+                if (iter == t.end ()) {
+                    t.emplace_back (i, states);
+
+                    ++states;
+                    g_.resize (states);
+
+                    iter = --g_ [state].end();
+                }
+
+                state = iter->second;
+                assert (state < g_.size ());
             }
 
-            make_output (state, word_index);
+            o_ [state].emplace (word_index);
+        }
+    }
+
+    size_type traverse (size_type state, int_type i) const {
+        while (true) {
+            auto& t = g_ [state];
+
+            auto iter = find_if (
+                t.begin (), t.end (), [&](const auto& arg) {
+                    return i == arg.first;
+                });
+
+            if (iter == t.end ()) {
+                if (0 == state)
+                    break;
+
+                state = f_ [state];
+            }
+            else {
+                state = iter->second;
+                break;
+            }
         }
 
-        for (size_t c = 0; c < alphabet_type::size (); ++c)
-            if (goto_ [c] == -1)
-                goto_ [c] = 0;
-    }
-
-    bool fails (int_type state, char_type c) const {
-        return transition (state, c) == -1;
-    }
-
-    void make_failure (int_type state, char_type c, int_type to) {
-        failure_ [transition (state, c)] = to;
+        return state;
     }
 
     void make_failure_function () {
-        queue< int_type > q;
+        f_.resize (g_.size ());
 
-        for (size_t c = 0; c < alphabet_type::size (); ++c) {
-            if (const auto state = goto_ [c]) {
-                failure_ [state] = 0;
-                q.push (state);
-            }
+        queue< size_type > q;
+
+        for (const auto& p : g_ [0]) {
+            const auto state = p.second;
+            q.push (state);
         }
 
         while (q.size ()) {
             const auto state = q.front ();
             q.pop ();
 
-            for (const auto c : make_char_range (a_.begin (), a_.end ())) {
-                if (transition (state, c) != -1) {
-                    int failure = failure_ [state];
+            for (auto& p : g_ [state]) {
+                const auto to = p.second;
+                q.push (to);
 
-                    while (fails (failure, c))
-                        failure = failure_ [failure];
+                const auto i = p.first;
+                f_ [to] = traverse (f_ [state], i);
 
-                    failure = transition (failure, c);
-                    make_failure (state, c, failure);
+                auto iter = o_.find (f_ [to]);
 
-                    {
-                        auto iter = output_.find (failure);
-
-                        if (iter != output_.end ()) {
-                            const auto& f = iter->second;
-
-                            const auto s = transition (state, c);
-                            output_ [s].insert (f.begin (), f.end ());
-                        }
-                    }
-
-                    q.push (transition (state, c));
+                if (iter != o_.end ()) {
+                    const auto& states = iter->second;
+                    o_ [to].insert (states.begin (), states.end ());
                 }
             }
         }
@@ -132,60 +131,46 @@ public:
     aho_corasick_t (
         Iterator first, Iterator last, const alphabet_type& a = alphabet_type ())
         : a_ (a) {
-        make_goto_function (first, last);
+        make_transition_function (first, last);
         make_failure_function ();
     }
 
     template< typename Iterator, typename Function >
     void operator() (Iterator iter, Iterator last, Function f) const {
-        constexpr auto n = alphabet_type::size ();
-
         size_t state = 0;
 
-        for (typename alphabet_type::off_type off = 0; iter != last;
-             ++off, ++iter) {
+        for (typename alphabet_type::size_type pos = 0; iter != last;
+             ++pos, ++iter) {
+            const auto c = alphabet_type::ordinal (*iter);
+            state = traverse (state, c);
 
-            const auto c = *iter;
+            auto iter2 = o_.find (state);
 
-            while (transition (state, c) == -1)
-                state = failure_ [state];
-
-            state = transition (state, c);
-
-            auto iter2 = output_.find (state);
-
-            if (iter2 != output_.end ())
-                for (const auto& i : iter2->second) f (i, off);
+            if (iter2 != o_.end ())
+                for (const auto& i : iter2->second) f (i, pos);
         }
     }
 
     template< typename Iterator >
     auto operator() (Iterator iter, Iterator last) const {
-        constexpr auto n = alphabet_type::size ();
+        size_t state = 0;
 
         using match_type = pair<
-            typename alphabet_type::pos_type,
-            typename alphabet_type::off_type >;
+            typename alphabet_type::size_type,
+            typename alphabet_type::size_type >;
 
         vector< match_type > v;
 
-        size_t state = 0;
+        for (typename alphabet_type::size_type pos = 0; iter != last;
+             ++pos, ++iter) {
+            const auto c = alphabet_type::ordinal (*iter);
+            state = traverse (state, c);
 
-        for (typename alphabet_type::off_type off = 0; iter != last;
-             ++off, ++iter) {
+            auto iter2 = o_.find (state);
 
-            const auto c = *iter;
-
-            while (transition (state, c) == -1)
-                state = failure_ [state];
-
-            state = transition (state, c);
-
-            auto iter2 = output_.find (state);
-
-            if (iter2 != output_.end ()) {
+            if (iter2 != o_.end ()) {
                 for (const auto& i : iter2->second)
-                    v.emplace_back (i, off);
+                    v.emplace_back (i, pos);
             }
         }
 
@@ -193,9 +178,14 @@ public:
     }
 
 private:
-    vector< int_type > failure_, goto_;
-    map< int_type, set< int_type > > output_;
+    vector< vector< pair< char_type, size_type > > > g_;
+    vector< size_type > f_;
+    map< size_type, set< size_type > > o_;
     alphabet_type a_;
 };
+
+template< typename T >
+/* static */ constexpr typename aho_corasick_t< T >::size_type
+aho_corasick_t< T >::npos /* = size_type (-1) */;
 
 #endif // HACKS_AHO_CORASICK_HPP

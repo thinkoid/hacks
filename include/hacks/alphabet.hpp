@@ -81,7 +81,6 @@ struct alphabet_base_t {
     using   char_type = typename traits_type::char_type;
     using    int_type = typename traits_type::int_type;
     using    off_type = typename traits_type::off_type;
-    using    pos_type = typename traits_type::pos_type;
 
     using size_type = typename make_unsigned< off_type >::type;
 
@@ -162,7 +161,6 @@ struct english_icase_alphabet_t : alphabet_base_t< T, U, 'A', 'Z', 26U > {
     using typename base_type::char_type;
     using typename base_type::int_type;
     using typename base_type::off_type;
-    using typename base_type::pos_type;
 
     using typename base_type::size_type;
 
@@ -188,7 +186,6 @@ struct english_lowercase_alphabet_t : alphabet_base_t< T, U, 'a', 'z', 26U > {
     using typename base_type::char_type;
     using typename base_type::int_type;
     using typename base_type::off_type;
-    using typename base_type::pos_type;
 
     using typename base_type::size_type;
 
@@ -213,7 +210,6 @@ struct english_uppercase_alphabet_t : english_icase_alphabet_t< T, U > {
     using typename base_type::char_type;
     using typename base_type::int_type;
     using typename base_type::off_type;
-    using typename base_type::pos_type;
 
     using typename base_type::size_type;
 
@@ -238,7 +234,6 @@ struct printable_ascii_alphabet_t : alphabet_base_t< T, U, ' ', '~', 95U > {
     using typename base_type::char_type;
     using typename base_type::int_type;
     using typename base_type::off_type;
-    using typename base_type::pos_type;
 
     using typename base_type::size_type;
 

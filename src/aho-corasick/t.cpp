@@ -14,7 +14,7 @@ using namespace std;
 #include <hacks/aho-corasick.hpp>
 
 int main (int, char** argv) {
-    const vector< string > arr { "he", "she", "hers", "his" };
+    const vector< string > arr { "he", "she", "his", "hers" };
     const string text = "uSHers";
 
     using alphabet_type = english_icase_alphabet_t< char >;
