@@ -120,7 +120,7 @@ tandem_arrays (const string& text, const string& pattern) {
     cout << endl;
 }
 
-int main (int, char** argv) {
+int main () {
 #define T(a, b) tandem_arrays (#a, #b)
 
     T (xabaabaababaaba, aba);

@@ -11,8 +11,6 @@ using namespace std;
 
 #include <hacks/suffix-tree.hpp>
 
-static constexpr auto npos = size_t (-1);
-
 int main () {
     size_t n;
     cin >> n;

@@ -16,7 +16,7 @@ static const size_t npos = size_t (-1);
 
 suffix_array_t
 make_suffix_array (const suffix_tree_t& t) {
-    suffix_array_t suffix_array { t.text };
+    suffix_array_t suffix_array { t.text, { }, { } };
 
     //
     // Stack of path length from root:

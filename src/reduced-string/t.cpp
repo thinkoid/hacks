@@ -14,7 +14,6 @@ static string
 reduced_string (const string& s) {
     assert (!s.empty ());
 
-    using iterator = string::iterator;
     using const_iterator = string::const_iterator;
 
     string t;

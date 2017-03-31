@@ -35,7 +35,7 @@ test (const string& s, const string& t, bool expected) {
     cout << endl;
 }
 
-int main (int, char** argv) {
+int main () {
 #define T(a, b, c) test (#a, #b, c)
 
     T (   abc,   bc, true);

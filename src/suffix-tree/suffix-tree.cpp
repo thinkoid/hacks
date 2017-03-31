@@ -28,15 +28,7 @@ struct active_point_t {
     size_t node, edge, off;
 };
 
-const auto default_active_point = active_point_t { };
-
-static const size_t npos = size_t (-1);
-
 ////////////////////////////////////////////////////////////////////////
-
-const auto edge_cmp = [](const auto& lhs, const auto& rhs) {
-    return lhs.first < rhs.first;
-};
 
 static inline pair< size_t, bool >
 edge_index (const node_type& node, size_t c) {
@@ -63,7 +55,6 @@ canonize (const suffix_tree_t& t, active_point_t a) {
         // non-zero offset, i.e., a zero offset means the active point is at an
         // internal node:
         //
-        const auto& node = t.nodes [a.node];
         const auto& edge = t.edges [a.edge];
 
         if (a.off < edge.len)
@@ -107,14 +98,14 @@ traverse_suffix_border (const suffix_tree_t& t, active_point_t a) {
     const auto result = edge_index (nodes [a.node], size_cast (c));
     a.edge = result.second ? result.first : 0;
 
-    return move (a);
+    return a;
 }
 
 suffix_tree_t
 make_suffix_tree (const string& text) {
     static const auto npos = size_t (-1);
 
-    suffix_tree_t t { text, { node_type { } } };
+    suffix_tree_t t { text, { node_type { } }, { } };
     active_point_t a { };
 
     for (size_t pos = 0; pos < text.size (); ++pos) {
@@ -149,7 +140,6 @@ make_suffix_tree (const string& text) {
                     // Check if the character matches at the current active
                     // point:
                     //
-                    const auto& node = t.nodes [a.node];
                     const auto& edge = t.edges [a.edge];
 
                     assert (edge.len > a.off);

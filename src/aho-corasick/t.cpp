@@ -34,7 +34,7 @@ int main (int, char** argv) {
 
 #else
 
-int main (int, char** argv) {
+int main () {
     size_t n;
     cin >> n;
 
@@ -48,23 +48,20 @@ int main (int, char** argv) {
 
     copy_n (istream_iterator< size_t > (cin), n, back_inserter (h));
 
-    vector< string > texts;
-    string s;
-
-    size_t i, j, k;
-    cin >> n;
-
-    for (size_t i = 0; cin && i < n; ++i) {
-        cin >> j >> k >> s;
-    }
-
     aho_corasick_t< english_lowercase_alphabet_t< char > > aho_corasick (
         g.begin (), g.end ());
+
+    string text;
+
+    size_t j, k;
+    cin >> n;
+
+    size_t min_ = size_t (-1), max_ = 0;
 
     for (string text; cin >> j >> k >> text;) {
         size_t value = 0;
 
-        aho_corasick (text.begin (), text.end (), [&](auto i) {
+        aho_corasick (text.begin (), text.end (), [&](auto i, auto) {
                 if (j <= i && i <= k)
                     value += h [i];
             });
@@ -76,7 +73,6 @@ int main (int, char** argv) {
             min_ = value;
     }
 
-    size_t min_ = size_t (-1), max_ = 0;
     cout << min_ << " " << max_ << endl;
 
     return 0;

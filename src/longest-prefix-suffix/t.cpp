@@ -53,7 +53,7 @@ test (const string& s, const string& t, size_t pos, size_t len) {
     cout << endl;
 }
 
-int main (int, char** argv) {
+int main () {
 #define T(a, b, pos, len) test (#a, #b, pos, len)
 
     T (     a,      a,  0,  1);
