@@ -2,32 +2,36 @@ dnl -*- Autoconf -*-
 
 AC_DEFUN([AC_CONFIG_CXX_WARNINGS],[
 
-CLANG_WARNFLAGS=" \
--Wno-deprecated-register \
--Wno-logical-op-parentheses"
+WARNFLAGS=" -W -Wall "
 
-GCC_WARNFLAGS=" \
--Wall \
+CLANG_WARNFLAGS="\
+-Wno-deprecated-register \
+-Wno-logical-op-parentheses \
+-Wno-parentheses "
+
+GCC_WARNFLAGS="\
 -Wno-parentheses \
 -Wno-strict-aliasing \
 -Wno-unused-function \
 -Wno-unused-local-typedefs \
--Wno-unused-variable"
+-Wno-unused-variable "
 
 test -z "$OSNAME" && OSNAME=$( uname )
 
 case $CXX in
     *clang++)
-        CXXFLAGS+=$GCC_WARNFLAGS
+        WARNFLAGS+=$GCC_WARNFLAGS
         ;;
     *g++)
         if test "$OSNAME" = "Darwin"; then
-            CXXFLAGS+=$CLANG_WARNFLAGS
+            WARNFLAGS+=$CLANG_WARNFLAGS
         else
-            CXXFLAGS+=$GCC_WARNFLAGS
+            WARNFLAGS+=$GCC_WARNFLAGS
         fi
         ;;
     *)
         ;;
 esac
+
+CXXFLAGS+=$WARNFLAGS
 ])

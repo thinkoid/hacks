@@ -4,6 +4,7 @@ SUBDIRS =                                       \
     suffix-tree                                 \
     suffix-array                                \
     aho-corasick                                \
+    cluster                                     \
     count-occurrences                           \
     cyclic-rotation                             \
     cyclic-substring                            \
