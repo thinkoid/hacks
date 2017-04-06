@@ -47,6 +47,8 @@ src/*/count-factors
 src/*/count-leaves
 src/*/t
 src/*/other
+src/cluster/blob
+src/cluster/subgraph
 src/lexicographical-merge/lexicographical-merge
 src/longest-prefix/cyclic-rotation
 src/longest-prefix/cyclic-substring
