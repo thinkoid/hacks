@@ -1,16 +1,3 @@
-#include <cassert>
-#include <cstring>
-
-#include <algorithm>
-#include <iostream>
-#include <iterator>
-#include <string>
-#include <vector>
-
-using namespace std;
-
-#include <hacks/suffix-tree.hpp>
-
 // -*- mode: c++ -*-
 
 #include <cstddef>

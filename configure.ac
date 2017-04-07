@@ -5,7 +5,7 @@ AC_INIT([hacks],[0.0.1],)
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([m4])
 
-AM_INIT_AUTOMAKE([-Wno-portability subdir-objects dist-bzip2 nostdinc])
+AM_INIT_AUTOMAKE([foreign -Wno-portability subdir-objects dist-bzip2 nostdinc])
 AC_CONFIG_HEADERS([include/hacks/_config.hpp:include/hacks/config.ac])
 
 AC_PROG_CXX
