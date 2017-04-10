@@ -13,19 +13,19 @@ using namespace std;
 #include <hacks/suffix-tree.hpp>
 #include <hacks/suffix-array.hpp>
 
-int main (int, char** argv) {
-    const auto t = make_suffix_tree (argv [1]);
-    cout << dot_graph_t (t).value () << endl;
+inline ostream&
+operator<< (ostream& s, const string_view_t& v) {
+    return s << string (v.first, v.last);
+}
 
-    const auto arr = make_suffix_array (t);
+int main () {
+    string s;
+    cin >> s;
 
-    for (size_t i = 0; i < arr.array.size (); ++i) {
-        const string s (arr.array [i].first, arr.array [i].last);
+    const auto a = make_suffix_array (make_suffix_tree (s));
 
-        cout << " --> " << int (arr.lcp [i]) << " : " << s << "\n";
-    }
-
-    cout << endl;
+    for (size_t i = 0; i < a.array.size (); ++i)
+        cout << int (a.lcp [i]) << " : " << a.array [i] << endl;
 
     return 0;
 }
