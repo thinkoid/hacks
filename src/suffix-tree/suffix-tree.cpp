@@ -19,6 +19,13 @@ inline auto size_cast (T value) {
     return size_t (make_unsigned_t< T > (value));
 }
 
+template< typename T, typename U >
+struct less< pair< T, U > > {
+    bool operator() (const pair< T, U >& lhs, const pair< T, U >& rhs) const {
+        return lhs.first < rhs.first;
+    }
+};
+
 ////////////////////////////////////////////////////////////////////////
 
 using node_type = suffix_tree_t::node_t;
@@ -240,6 +247,11 @@ make_suffix_tree (const string& text) {
 
             a = canonize (t, a);
         }
+    }
+
+    for (auto& node : t.nodes) {
+        auto& e = node.edges;
+        sort (e.begin (), e.end (), less< pair< size_t, size_t > > { });
     }
 
     return t;
