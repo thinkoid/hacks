@@ -12,9 +12,8 @@ SUBDIRS =                                       \
     lexicographical-merge                       \
     longest-prefix                              \
     longest-prefix-suffix                       \
+    lps                                         \
     make-anagram                                \
-    palindrome-index                            \
-    palindromes                                 \
     perf                                        \
     reduced-string                              \
     string-function                             \
