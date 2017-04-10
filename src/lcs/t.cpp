@@ -23,7 +23,7 @@ inline auto size_cast (T value) {
     return size_t (make_unsigned_t< T > (value));
 }
 
-static string
+static tuple< string, size_t, size_t >
 lcs (const string& a, const string& b) {
     size_t n = a.size (), m = b.size (), i, j;
     string s;
@@ -31,35 +31,30 @@ lcs (const string& a, const string& b) {
     auto S = vector< vector< int > > (n + 1, vector< int > (m + 1, 0));
     auto R = vector< vector< int > > (n + 1, vector< int > (m + 1, 0));
 
-    for (i = 0; i <= n; ++i) {
-        S [i][0] = 0;
-        R [i][0] = UP;
-    }
+    for (auto& v : S) v [0] = 0;
+    for (auto& v : R) v [0] = UP;
 
-    for(j = 0; j <= m; ++j) {
-        S [0][j] = 0;
-        R [0][j] = LEFT;
-    }
+    fill (R [0].begin (), R [0].end (), LEFT);
 
     for (i = 1; i <= n; ++i) {
         for (j = 1; j <= m; ++j) {
-            if( a[i-1] == b[j-1] ) {
-                S[i][j] = S[i-1][j-1] + 1;
-                R[i][j] = UP_AND_LEFT;
+            if( a [i-1] == b [j-1] ) {
+                S [i][j] = S [i-1][j-1] + 1;
+                R [i][j] = UP_AND_LEFT;
             }
             else {
-                S[i][j] = S[i-1][j-1] + 0;
-                R[i][j] = NEITHER;
+                S [i][j] = S [i-1][j-1] + 0;
+                R [i][j] = NEITHER;
             }
 
-            if( S[i-1][j] >= S[i][j] ) {
-                S[i][j] = S[i-1][j];
-                R[i][j] = UP;
+            if( S [i-1][j] >= S [i][j] ) {
+                S [i][j] = S [i-1][j];
+                R [i][j] = UP;
             }
 
-            if( S[i][j-1] >= S[i][j] ) {
-                S[i][j] = S[i][j-1];
-                R[i][j] = LEFT;
+            if( S [i][j-1] >= S [i][j] ) {
+                S [i][j] = S [i][j-1];
+                R [i][j] = LEFT;
             }
         }
     }
@@ -67,27 +62,44 @@ lcs (const string& a, const string& b) {
     i = n;
     j = m;
 
-    while( i > 0 || j > 0 ) {
-        if( R[i][j] == UP_AND_LEFT ) {
-            i--;
-            j--;
+    bool save = false;
+    int pos [2] = { 0 };
+
+    while (i > 0 || j > 0) {
+        if( R [i][j] == UP_AND_LEFT ) {
+            if (!save) {
+                save = true;
+                pos [0] = i;
+                pos [1] = j;
+            }
+
+            --i;
+            --j;
 
             s += a [i];
         }
         else if( R[i][j] == UP ) {
-            i--;
+            --i;
         }
         else if( R[i][j] == LEFT ) {
-            j--;
+            --j;
         }
     }
 
-    return reverse (s.begin (), s.end ()), s;
+    reverse (s.begin (), s.end ());
+
+    return { s, pos [0] - s.size (), pos [1] - s.size () };
 }
 
 int
-main (int argc, char** argv) {
-    string s, t;
-    cin >> s >> t;
-    cout << lcs (s, t).size () << endl;
+main (int, char** argv) {
+    string s (argv [1]), t (argv [2]);
+
+    size_t a, b;
+    string u;
+
+    tie (u, a, b) = lcs (s, t);
+    cout << a << ", " << b << ", " << u << endl;
+
+    return 0;
 }
