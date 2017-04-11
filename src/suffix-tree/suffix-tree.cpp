@@ -347,16 +347,16 @@ vector< pair< size_t, size_t > >
 distinct_factors (const suffix_tree_t& t) {
     vector< pair< size_t, size_t > > v;
 
-    stack< tuple< size_t, size_t, size_t > > st;
-    st.emplace (0, 0, 0);
+    stack< tuple< size_t, size_t, size_t > > state;
+    state.emplace (0, 0, 0);
 
     size_t i = 0, j = 0, len = 0;
 
-    while (!st.empty ()) {
+    while (!state.empty ()) {
         while (j < t.nodes [i].edges.size ()) {
             const auto& e = t.edges [t.nodes [i].edges [j].second];
 
-            len = get< 2 > (st.top ());
+            len = get< 2 > (state.top ());
             assert (e.pos >= len);
 
             auto first = e.pos - len, last = (0 == e.end)
@@ -368,15 +368,15 @@ distinct_factors (const suffix_tree_t& t) {
             if (0 == e.end)
                 ++j;
             else {
-                st.emplace (i, j, last - first);
+                state.emplace (i, j, last - first);
 
                 i = e.end;
                 j = 0;
             }
         }
 
-        tie (i, j, len) = st.top ();
-        st.pop ();
+        tie (i, j, len) = state.top ();
+        state.pop ();
 
         ++j;
     }
