@@ -55,6 +55,9 @@ count_all_leaves (const suffix_tree_t&);
 size_t
 count_distinct_factors (const suffix_tree_t&);
 
+vector< pair< size_t, size_t > >
+distinct_factors (const suffix_tree_t&);
+
 vector< size_t >
 match (const suffix_tree_t&, const string&);
 

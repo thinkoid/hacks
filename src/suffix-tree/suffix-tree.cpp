@@ -328,6 +328,7 @@ count_distinct_factors (const suffix_tree_t& t) {
     for (const auto& node : t.nodes) {
         for (const auto& p : node.edges) {
             const auto& edge = t.edges [p.second];
+            assert (edge.len);
 
             if (0 == edge.len)
                 continue;
@@ -340,6 +341,47 @@ count_distinct_factors (const suffix_tree_t& t) {
     }
 
     return n;
+}
+
+vector< pair< size_t, size_t > >
+distinct_factors (const suffix_tree_t& t) {
+    vector< pair< size_t, size_t > > v;
+
+    stack< tuple< size_t, size_t, size_t > > st;
+    st.emplace (0, 0, 0);
+
+    size_t i = 0, j = 0, len = 0;
+
+    while (!st.empty ()) {
+        while (j < t.nodes [i].edges.size ()) {
+            const auto& e = t.edges [t.nodes [i].edges [j].second];
+
+            len = get< 2 > (st.top ());
+            assert (e.pos >= len);
+
+            auto first = e.pos - len, last = (0 == e.end)
+                ? t.text.size () : e.pos + e.len;
+
+            for (size_t pos = e.pos + 1; pos <= last; ++pos)
+                v.emplace_back (first, pos - first);
+
+            if (0 == e.end)
+                ++j;
+            else {
+                st.emplace (i, j, last - first);
+
+                i = e.end;
+                j = 0;
+            }
+        }
+
+        tie (i, j, len) = st.top ();
+        st.pop ();
+
+        ++j;
+    }
+
+    return v;
 }
 
 vector< size_t >
