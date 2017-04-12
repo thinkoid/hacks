@@ -13,6 +13,7 @@ SUBDIRS =                                       \
     longest-prefix                              \
     longest-prefix-suffix                       \
     lps                                         \
+    lrf                                         \
     make-anagram                                \
     perf                                        \
     reduced-string                              \
