@@ -13,18 +13,20 @@ using namespace std;
 
 namespace detail {
 
+using num_type = pair< pair< size_t, size_t >, size_t >;
+
 static inline void
-do_kmr (vector< size_t >& rank, size_t k) {
+do_kmr (vector< num_type >& NUM, vector< size_t >& rank, size_t k) {
+    assert (NUM.size () == rank.size ());
     const auto n = rank.size ();
-    vector< tuple< size_t, size_t, size_t > > NUM (n);
 
     size_t i = 0;
 
     for (; i < n - k; ++i)
-        NUM [i] = { rank [i], rank [i + k], i };
+        NUM [i] = { { rank [i], rank [i + k] }, i };
 
     for (; i < n; ++i)
-        NUM [i] = { rank [i], n, i };
+        NUM [i] = { { rank [i], n }, i };
 
     //
     // Identical rank array values will indicate identical substrings of rank
@@ -48,7 +50,7 @@ do_kmr (vector< size_t >& rank, size_t k) {
     //
     // Rebase the counter:
     //
-    rank [get<2>(NUM [0])] = 0;
+    rank [NUM [0].second] = 0;
 
     for (size_t i = 1; i < rank.size (); ++i) {
         const auto &lhs = NUM [i - 1], &rhs = NUM [i];
@@ -56,31 +58,29 @@ do_kmr (vector< size_t >& rank, size_t k) {
         //
         // Increment the counter when moving across group boundaries:
         //
-        const auto q =
-            get<0>(lhs) == get<0>(rhs) &&
-            get<1>(lhs) == get<1>(rhs) ? 0 : 1;
+        const auto q = lhs.first == rhs.first ? 0 : 1;
 
         //
         // The counter value propagates unchanged until the next boundary:
         //
-        rank [get<2>(rhs)] = rank [get<2>(lhs)] + q;
+        rank [rhs.second] = rank [lhs.second] + q;
     }
 }
 
 static vector< size_t >
 kmr (vector< size_t > rank, size_t r) {
+    const auto n = rank.size ();
+    vector< num_type > NUM (n);
+
+    //
+    // Do KMR up to the floor of log2(r), then incrementally up to r:
+    //
     size_t k = 0;
 
-    //
-    // Do KMR up to the floor of log2(r) ...
-    //
     for (k = 0; k * 2 <= r; k ? k *= 2 : ++k)
-        do_kmr (rank, k);
+        do_kmr (NUM, rank, k);
 
-    //
-    // ... and move one step at a time, afterwards:
-    //
-    do_kmr (rank, r - k);
+    do_kmr (NUM, rank, r - k);
 
     return rank;
 }
@@ -91,10 +91,8 @@ static vector< size_t >
 kmr (const string& text, size_t r) {
     assert (r < text.size ());
 
-    vector< size_t > rank;
-    rank.reserve (text.size ());
-
-    copy (text.begin (), text.end (), back_inserter (rank));
+    vector< size_t > rank (text.size ());
+    copy (text.begin (), text.end (), rank.begin ());
 
     return detail::kmr (rank, r);
 }
