@@ -29,9 +29,9 @@ do_kmr (vector< num_type >& NUM, vector< size_t >& rank, size_t k) {
         NUM [i] = { { rank [i], n }, i };
 
     //
-    // Identical rank array values will indicate identical substrings of rank
-    // (length) `r'. Two substrings at indices i and j are identical if
-    // rank[i] = rank[j] (or, i and j are r-equivalent, when rank[i] = rank[j]).
+    // Identical rank array values (labels) mark identical substrings of rank
+    // (length) `r'. Two substrings at indices i and j are identical if rank[i]
+    // = rank[j] (or, i and j are r-equivalent, when rank[i] = rank[j]).
     //
 
     //
@@ -43,8 +43,8 @@ do_kmr (vector< num_type >& NUM, vector< size_t >& rank, size_t k) {
 
     //
     // The renumber algorithm is an exceedingly clever way to assign a growing
-    // sequence of numbers to groups of identical values (pairs of values,
-    // indices [0,1] in each NUM element) in NUM.
+    // sequence of numbers (labels) to groups of identical values (pairs of
+    // values, indices [0,1] in each NUM element) in NUM.
     //
 
     //
@@ -73,13 +73,16 @@ kmr (vector< size_t > rank, size_t r) {
     vector< num_type > NUM (n);
 
     //
-    // Do KMR up to the floor of log2(r), then incrementally up to r:
+    // Do KMR up to the floor of log2(r) ...
     //
     size_t k = 0;
 
     for (k = 0; k * 2 <= r; k ? k *= 2 : ++k)
         do_kmr (NUM, rank, k);
 
+    //
+    // ... and once more for the remaining depth:
+    //
     do_kmr (NUM, rank, r - k);
 
     return rank;
