@@ -19,12 +19,16 @@ inline auto size_cast (T value) {
     return size_t (make_unsigned_t< T > (value));
 }
 
+namespace std {
+
 template< typename T, typename U >
 struct less< pair< T, U > > {
     bool operator() (const pair< T, U >& lhs, const pair< T, U >& rhs) const {
         return lhs.first < rhs.first;
     }
 };
+
+} // namespace std
 
 ////////////////////////////////////////////////////////////////////////
 
