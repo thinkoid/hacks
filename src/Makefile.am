@@ -15,6 +15,7 @@ SUBDIRS =                                       \
     lps                                         \
     lrf                                         \
     make-anagram                                \
+    manacher                                    \
     perf                                        \
     reduced-string                              \
     string-function                             \
