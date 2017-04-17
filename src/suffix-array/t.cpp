@@ -1,6 +1,7 @@
 #include <cassert>
 #include <cstring>
 
+#include <algorithm>
 #include <iomanip>
 #include <iostream>
 #include <map>
@@ -22,10 +23,12 @@ int main () {
     string s;
     cin >> s;
 
-    const auto a = make_suffix_array (make_suffix_tree (s));
+    const auto t = make_suffix_tree (s);
+    const auto a = make_suffix_array (t);
 
-    for (size_t i = 0; i < a.array.size (); ++i)
-        cout << int (a.lcp [i]) << " : " << a.array [i] << endl;
+    for (size_t i = 0; i < a.array.size (); ++i) {
+        cout << setw (4) << int (a.lcp [i]) << " : " << a.array [i] << endl;
+    }
 
     return 0;
 }
