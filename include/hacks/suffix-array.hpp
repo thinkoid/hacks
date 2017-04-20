@@ -7,12 +7,12 @@
 #include <hacks/suffix-tree.hpp>
 
 struct string_view_t {
-    string::const_iterator first, last;
+    size_t pos, len;
 };
 
 struct suffix_array_t {
     const string text;
-    vector< string_view_t > array;
+    vector< string_view_t > arr;
     vector< size_t > lcp;
 };
 

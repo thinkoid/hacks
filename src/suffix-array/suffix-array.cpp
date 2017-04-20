@@ -16,7 +16,9 @@ static const size_t npos = size_t (-1);
 
 suffix_array_t
 make_suffix_array (const suffix_tree_t& t) {
-    suffix_array_t suffix_array { t.text, { }, { } };
+    static const auto npos = size_t (-1);
+
+    suffix_array_t a { t.text, { }, { } };
 
     //
     // Stack of path length from root:
@@ -37,7 +39,7 @@ make_suffix_array (const suffix_tree_t& t) {
             const auto& node = t.nodes [i];
             const auto& edge = t.edges [node.edges [j].second];
 
-            assert (t.text.size () > edge.pos);
+            assert (a.text.size () > edge.pos);
 
             if (j) {
                 overlap = overlap_stack.top ();
@@ -64,20 +66,15 @@ make_suffix_array (const suffix_tree_t& t) {
                 continue;
             }
             else {
-                auto first = t.text.begin (), last = first;
-                advance (first, pos);
-
                 auto len = overlap_stack.top ();
 
                 if (edge.end)
                     len += edge.len;
                 else
-                    len += t.text.size () - edge.pos;
+                    len += a.text.size () - edge.pos;
 
-                advance (last, pos + len);
-
-                suffix_array.array.emplace_back (string_view_t { first, last });
-                suffix_array.lcp.emplace_back (overlap);
+                a.arr.emplace_back (string_view_t { pos, len });
+                a.lcp.emplace_back (overlap);
             }
 
             ++j;
@@ -94,7 +91,7 @@ make_suffix_array (const suffix_tree_t& t) {
         overlap_stack.pop ();
     }
 
-    suffix_array.lcp [0] = npos;
+    a.lcp [0] = npos;
 
-    return suffix_array;
+    return a;
 }
