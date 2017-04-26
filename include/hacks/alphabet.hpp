@@ -94,18 +94,19 @@ struct alphabet_base_t {
     }
 };
 
+#define HACKS_BASE_TYPEDEFS                     \
+    using typename base_type::traits_type;      \
+    using typename base_type::char_type;        \
+    using typename base_type::int_type;         \
+    using typename base_type::off_type;         \
+    using typename base_type::pos_type;         \
+    using typename base_type::size_type
+
 template< typename T, typename U = char_traits< T > >
 struct english_alphabet_t : alphabet_base_t< T, U, 'A', 'z', 52U > {
     using base_type = alphabet_base_t< T, U, 'A', 'z', 52U >;
 
-    using typename base_type::traits_type;
-
-    using typename base_type::char_type;
-    using typename base_type::int_type;
-    using typename base_type::off_type;
-    using typename base_type::pos_type;
-
-    using typename base_type::size_type;
+    HACKS_BASE_TYPEDEFS;
 
     static inline off_type ordinal (char_type c) {
         const auto i = traits_type::to_int_type (c);
@@ -156,13 +157,7 @@ template< typename T, typename U = char_traits< T > >
 struct english_icase_alphabet_t : alphabet_base_t< T, U, 'A', 'Z', 26U > {
     using base_type = alphabet_base_t< T, U, 'A', 'Z', 26U >;
 
-    using typename base_type::traits_type;
-
-    using typename base_type::char_type;
-    using typename base_type::int_type;
-    using typename base_type::off_type;
-
-    using typename base_type::size_type;
+    HACKS_BASE_TYPEDEFS;
 
     static inline off_type ordinal (char_type c) {
         const auto i = traits_type::to_int_type (c);
@@ -181,13 +176,7 @@ template< typename T, typename U = char_traits< T > >
 struct english_lowercase_alphabet_t : alphabet_base_t< T, U, 'a', 'z', 26U > {
     using base_type = alphabet_base_t< T, U, 'a', 'z', 26U >;
 
-    using typename base_type::traits_type;
-
-    using typename base_type::char_type;
-    using typename base_type::int_type;
-    using typename base_type::off_type;
-
-    using typename base_type::size_type;
+    HACKS_BASE_TYPEDEFS;
 
     static inline off_type ordinal (char_type c) {
         const auto i = traits_type::to_int_type (c);
@@ -205,13 +194,7 @@ template< typename T, typename U = char_traits< T > >
 struct english_uppercase_alphabet_t : english_icase_alphabet_t< T, U > {
     using base_type = english_icase_alphabet_t< T, U >;
 
-    using typename base_type::traits_type;
-
-    using typename base_type::char_type;
-    using typename base_type::int_type;
-    using typename base_type::off_type;
-
-    using typename base_type::size_type;
+    HACKS_BASE_TYPEDEFS;
 
     static inline off_type ordinal (char_type c) {
         const auto i = traits_type::to_int_type (c);
@@ -229,13 +212,7 @@ template< typename T, typename U = char_traits< T > >
 struct printable_ascii_alphabet_t : alphabet_base_t< T, U, ' ', '~', 95U > {
     using base_type = alphabet_base_t< T, U, ' ', '~', 95U >;
 
-    using typename base_type::traits_type;
-
-    using typename base_type::char_type;
-    using typename base_type::int_type;
-    using typename base_type::off_type;
-
-    using typename base_type::size_type;
+    HACKS_BASE_TYPEDEFS;
 
     static inline off_type ordinal (char_type c) {
         const auto i = traits_type::to_int_type (c);
@@ -248,5 +225,7 @@ struct printable_ascii_alphabet_t : alphabet_base_t< T, U, ' ', '~', 95U > {
     iterator begin () const { return iterator (' ');     }
     iterator   end () const { return iterator ('~' + 1); }
 };
+
+#undef HACKS_BASE_TYPEDEFS
 
 #endif // HACKS_ALPHABET_HPP
