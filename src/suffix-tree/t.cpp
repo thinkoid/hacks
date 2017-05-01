@@ -26,6 +26,8 @@ const vector< string > test_data {
     "ABCABCABCABCABCABTCABCABC"
 };
 
+#if 0
+
 #include <benchmark/benchmark.h>
 
 static string
@@ -54,35 +56,56 @@ BM_tree_construction (benchmark::State& state) {
 
 BENCHMARK (BM_tree_construction)->DenseRange (0, test_data.size () - 1);
 
-static void
-BM_leaf_counting (benchmark::State& state) {
-    const string s = test_data [state.range (0)] + "$";
-    const auto t = make_suffix_tree (s);
-
-    state.SetLabel (make_label (s));
-
-    while (state.KeepRunning ())
-        benchmark::DoNotOptimize (count_all_leaves (t));
-}
-
-BENCHMARK (BM_leaf_counting)->DenseRange (0, test_data.size () - 1);
-
-static void
-BM_substring_matching (benchmark::State& state) {
-    const string s = test_data [state.range (0)] + "$";
-
-    const auto t = make_suffix_tree (s);
-    const auto v = count_all_leaves (t);
-
-    state.SetLabel (make_label (s));
-
-    while (state.KeepRunning ()) {
-        benchmark::DoNotOptimize (match (t, "AAA"));
-        benchmark::DoNotOptimize (match (t, "ABC"));
-        benchmark::DoNotOptimize (match (t, "BTC"));
-    }
-}
-
-BENCHMARK (BM_substring_matching)->DenseRange (0, test_data.size () - 1);
-
 BENCHMARK_MAIN ();
+
+#else
+
+////////////////////////////////////////////////////////////////////////
+
+struct dot_graph_t {
+    explicit dot_graph_t (const suffix_tree_t& t)
+        : value_ (make_dot (t))
+        { }
+
+    const string& value () const {
+        return value_;
+    }
+
+private:
+    static string
+    make_dot (const suffix_tree_t& t) {
+        stringstream ss;
+
+        ss << "#+BEGIN_SRC dot :file t.png :cmdline -Kdot -Tpng\n";
+        ss << "digraph g {\n";
+
+        for (size_t i = 1; i < t.nodes.size (); ++i)
+            ss << "    " << i << ";\n";
+
+        for (size_t i = 1; i < t.nodes.size (); ++i) {
+            for (size_t j = 0; j < t.nodes [i].edges.size (); ++j) {
+                const auto& e = t.edges [t.nodes [i].edges [j].second];
+
+                ss << "    " << e.s << " -> " << e.s_
+                   << " [label=\"" << t.text.substr (e.k, e.p - e.k + 1)
+                   << "\"];\n";
+            }
+        }
+
+        ss << "}\n";
+        ss << "#+END_SRC\n\n";
+
+        return ss.str ();
+    }
+
+private:
+    string value_;
+};
+
+int main (int, char** argv) {
+    const auto t = make_suffix_tree (argv [1]);
+    cout << dot_graph_t (t).value () << endl;
+    return 0;
+}
+
+#endif

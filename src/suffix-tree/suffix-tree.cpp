@@ -1,10 +1,8 @@
-#include <cstddef>
 #include <cassert>
 
 #include <algorithm>
 #include <iostream>
-#include <numeric>
-#include <stack>
+#include <limits>
 #include <string>
 #include <sstream>
 #include <tuple>
@@ -14,504 +12,247 @@ using namespace std;
 
 #include <hacks/suffix-tree.hpp>
 
-template< typename T >
-inline auto size_cast (T value) {
-    return size_t (make_unsigned_t< T > (value));
-}
+//
+// E. Ukkonen: Constructing suffix trees on-line in linear time.
+// Proc. Information Processing 92, Vol. 1, IFIP Transactions A-12,
+// 484-492, Elsevier 1992.
+//
 
-namespace std {
-
-template< typename T, typename U >
-struct less< pair< T, U > > {
-    bool operator() (const pair< T, U >& lhs, const pair< T, U >& rhs) const {
-        return lhs.first < rhs.first;
-    }
+template< typename T, size_t N, typename ... REST >
+struct tuple_generator_n {
+    using type = typename tuple_generator_n< T, N - 1, T, REST ... >::type;
 };
 
-} // namespace std
+template< typename T, typename ... REST >
+struct tuple_generator_n< T, 0, REST ... > {
+    using type = std::tuple< REST ... >;
+};
 
-////////////////////////////////////////////////////////////////////////
+template< typename T, size_t N >
+using tuple_n = typename tuple_generator_n< T, N >::type;
 
 using node_type = suffix_tree_t::node_t;
 using edge_type = suffix_tree_t::edge_t;
 
-struct active_point_t {
-    size_t node, edge, off;
-};
+static constexpr size_t AUX = 0, ROOT = 1, INF = (numeric_limits< int >::max)();
 
 ////////////////////////////////////////////////////////////////////////
 
-static inline pair< size_t, bool >
-edge_index (const node_type& node, size_t c) {
-    const auto iter = find_if (
+static inline const node_type&
+node_at (const suffix_tree_t& t, size_t s) {
+    assert (s < t.nodes.size ());
+    return t.nodes [s];
+}
+
+static inline node_type&
+node_at (suffix_tree_t& t, size_t s) {
+    assert (s < t.nodes.size ());
+    return t.nodes [s];
+}
+
+static inline bool
+has_transition (const node_type& node, int c) {
+    auto iter = find_if (
         node.edges.begin (), node.edges.end (), [&](const auto& arg) {
             return c == arg.first;
         });
 
-    pair< size_t, bool > result { };
-
-    if (iter != node.edges.end ())
-        result = pair< size_t, bool > { iter->second, true };
-
-    return result;
+    return iter != node.edges.end ();
 }
 
-static active_point_t
-canonize (const suffix_tree_t& t, active_point_t a) {
-    const auto& text = t.text;
+static inline bool
+has_transition (const suffix_tree_t& t, size_t s, int c) {
+    const auto& node = node_at (t, s);
+    return has_transition (node, c);
+}
 
-    while (a.off) {
+static inline tuple< size_t, int, int, size_t >
+g_ (const suffix_tree_t& t, size_t s, int c) {
+    auto& edges = node_at (t, s).edges;
+
+    const auto iter = find_if (
+        edges.begin (), edges.end (), [&](const auto& arg) {
+            return c == arg.first;
+        });
+
+    assert (iter != edges.end ());
+
+    return tuple< size_t, int, int, size_t > (t.edges [iter->second]);
+}
+
+static size_t&
+g_ (suffix_tree_t& t, size_t s, tuple_n< int, 2 > ref) {
+    int k, p;
+    tie (k, p) = ref;
+
+    auto& edges = node_at (t, s).edges;
+
+    auto iter = find_if (
+        edges.begin (), edges.end (), [&](const auto& arg) {
+            return t.text [k] == arg.first;
+        });
+
+    if (iter == edges.end ()) {
         //
-        // The edge information in the active point data is valid only with a
-        // non-zero offset, i.e., a zero offset means the active point is at an
-        // internal node:
+        // Insert a new edge if not already present:
         //
-        const auto& edge = t.edges [a.edge];
+        const auto e = t.edges.size ();
 
-        if (a.off < edge.len)
-            break;
+        t.edges.emplace_back (edge_type { s, { }, k, p });
+        edges.emplace_back (t.text [k], e);
 
-        a.off -= edge.len;
+        iter = --edges.end ();
+    }
+    else {
+        //
+        // Modify the existing edge with incoming arguments:
+        //
+        auto& edge = t.edges [iter->second];
 
-        assert (edge.end);
-        a.node = edge.end;
+        edge.k = k;
+        edge.p = p;
+    }
 
-        if (a.off) {
-            assert (text.size () > edge.pos + edge.len);
-            const auto c = text [edge.pos + edge.len];
+    return t.edges [iter->second].s_;
+}
 
-            const auto& node = t.nodes [a.node];
+////////////////////////////////////////////////////////////////////////
 
-            const auto result = edge_index (node, size_cast (c));
-            assert (result.second);
+static tuple< size_t, int >
+canonize (const suffix_tree_t& t, size_t s, tuple_n< int, 2 > ref) {
+    size_t s_, ignore;
+    int k, p, k_, p_;
 
-            a.edge = result.first;
+    tie (k, p) = ref;
+    assert (k >= 0);
+
+    if (k <= p) {
+        const auto tk = t.text [k];
+
+        tie (ignore, k_, p_, s_) = g_ (t, s, tk);
+        assert (k_ >= 0);
+
+        while (p_ - k_ <= p - k) {
+            k = k + p_ - k_ + 1;
+            s = s_;
+
+            if (k <= p) {
+                const auto tk = t.text [k];
+
+                tie (ignore, k_, p_, s_) = g_ (t, s, tk);
+                assert (k_ >= 0);
+            }
         }
     }
 
-    if (0 == a.off)
-        a.edge = 0;
-
-    return a;
+    return { s, k };
 }
 
-static active_point_t
-traverse_suffix_border (const suffix_tree_t& t, active_point_t a) {
-    const auto& text = t.text;
+static tuple< size_t, bool >
+test_and_split (suffix_tree_t& t, size_t s, tuple_n< int, 2 > ref, int c) {
+    size_t s_, ignore;
+    int k, p, k_, p_;
 
-    const auto& nodes = t.nodes;
-    const auto& edges = t.edges;
+    tie (k, p) = ref;
+    assert (k >= 0);
 
-    a.node = t.nodes [a.node].link;
+    if (k <= p) {
+        const auto tk = t.text [k];
 
-    const auto c = text [edges [a.edge].pos];
+        //
+        // Find tk-transition g'(s,(k',p'))=s':
+        //
+        tie (ignore, k_, p_, s_) = g_ (t, s, tk);
+        assert (k_ >= 0);
 
-    const auto result = edge_index (nodes [a.node], size_cast (c));
-    a.edge = result.second ? result.first : 0;
+        if (c == t.text [k_ + p - k + 1])
+            return { s, true };
+        else {
+            //
+            // Create new state, r:
+            //
+            const auto r = t.nodes.size ();
+            t.nodes.emplace_back ();
 
-    return a;
+            //
+            // Modify existing transition, g'(s,(k',k'+p-k))=r, and create a new
+            // transition, g'(r,(k'+p-k+1,p'))=s':
+            //
+            g_ (t, s, { k_, k_ + p - k }) = r;
+            g_ (t, r, { k_ + p - k + 1, p_ }) = s_;
+
+            return { r, false };
+        }
+    }
+    else {
+        return { s, has_transition (t, s, c) };
+    }
 }
+
+static tuple< size_t, int >
+update (suffix_tree_t& t, size_t s, tuple_n< int, 2 > ref) {
+    int k, i;
+
+    tie (k, i) = ref;
+    assert (k >= 0);
+
+    const auto ti = t.text [i];
+
+    bool b;
+    size_t oldr = ROOT, r = 0;
+
+    tie (r, b) = test_and_split (t, s, { k, i - 1 }, ti);
+
+    while (!b) {
+        //
+        // Create new transition g'(r,(i,∞))=r'
+        //
+        {
+            const auto r_ = t.nodes.size ();
+            const auto e  = t.edges.size ();
+
+            t.edges.emplace_back (edge_type { r, r_, i, INF });
+            t.nodes.emplace_back ();
+
+            t.nodes [r].edges.emplace_back (t.text [i], e);
+        }
+
+        if (oldr != ROOT)
+            t.nodes [oldr].link = r;
+
+        oldr = r;
+
+        tie (s, k) = canonize (t, t.nodes [s].link, { k, i - 1 });
+        tie (r, b) = test_and_split (t, s, { k, i - 1 }, t.text [i]);
+    }
+
+    if (oldr != ROOT)
+        t.nodes [oldr].link = s;
+
+    return { s, k };
+}
+
+////////////////////////////////////////////////////////////////////////
 
 suffix_tree_t
 make_suffix_tree (const string& text) {
-    static const auto npos = size_t (-1);
+    suffix_tree_t t { text + "~", vector< node_type > (2U), { } };
 
-    suffix_tree_t t { text, { node_type { } }, { } };
-    active_point_t a { };
-
-    for (size_t pos = 0; pos < text.size (); ++pos) {
-        size_t prev_node = npos, curr_node = npos;
-
-        for (const auto c = text [pos]; ;) {
-            curr_node = a.node;
-
-            if (0 == a.off) {
-                //
-                // Active point is at explicit node:
-                //
-                const auto& node = t.nodes [a.node];
-
-                const auto result = edge_index (node, size_cast (c));
-
-                if (result.second) {
-                    //
-                    // Matching edge out of current node:
-                    //
-                    a.edge = result.first;
-
-                    ++a.off;
-                    a = canonize (t, a);
-
-                    break;
-                }
-            }
-            else {
-                {
-                    //
-                    // Check if the character matches at the current active
-                    // point:
-                    //
-                    const auto& edge = t.edges [a.edge];
-
-                    assert (edge.len > a.off);
-                    const auto next = text [edge.pos + a.off];
-
-                    if (c == next) {
-                        //
-                        // Adjust active point when matching:
-                        //
-                        ++a.off;
-                        a = canonize (t, a);
-
-                        break;
-                    }
-                }
-
-                {
-                    const auto node_pos = t.nodes.size ();
-                    const auto edge_pos = t.edges.size ();
-
-                    {
-                        const auto& edge = t.edges [a.edge];
-
-                        //
-                        // Insert explicit node at the implicit node position:
-                        //
-                        t.nodes.emplace_back (node_type { edge.beg, 0U, { } });
-
-                        t.edges.emplace_back (edge_type {
-                            node_pos, edge.end, edge.pos + a.off,
-                            edge.len == npos ? npos : edge.len - a.off
-                        });
-                    }
-
-                    {
-                        auto& node = t.nodes.back ();
-                        auto& edge = t.edges [a.edge];
-
-                        const auto next = text [edge.pos + a.off];
-                        node.edges.emplace_back (size_cast (next), edge_pos);
-
-                        //
-                        // Cut active edge:
-                        //
-                        edge.end = node_pos;
-                        edge.len = a.off;
-                    }
-
-                    curr_node = node_pos;
-
-                    //
-                    // Suffix-link this node:
-                    //
-                    if (npos != prev_node)
-                        t.nodes [prev_node].link = curr_node;
-
-                    prev_node = curr_node;
-                }
-            }
-
-            {
-                //
-                // Either an explicit node has no edge out matching the current
-                // position, or the edge has been split at the implicit node --
-                // a new edge is required at the current node:
-                //
-                const auto edge_pos = t.edges.size ();
-
-                t.edges.emplace_back (
-                    edge_type { curr_node, 0, pos, npos });
-
-                auto& node = t.nodes [curr_node];
-                node.edges.emplace_back (size_cast (c), edge_pos);
-            }
-
-            if (0 == a.node) {
-                if (0 == a.off)
-                    break;
-
-                if (--a.off) {
-                    //
-                    // Recompute the active point edge:
-                    //
-                    const auto c = text [pos - a.off];
-
-                    const auto result = edge_index (t.nodes [0], size_cast (c));
-                    assert (result.second);
-
-                    a.edge = result.first;
-                }
-            }
-            else {
-                //
-                // Traverse alongside the suffix border line:
-                //
-                a = traverse_suffix_border (t, a);
-            }
-
-            a = canonize (t, a);
-        }
+    for (int i = 0; i < (numeric_limits< char >::max) (); ++i) {
+        const auto e = t.edges.size ();
+        t.edges.emplace_back (edge_type { AUX, ROOT, 0, 0 });
+        t.nodes [AUX].edges.emplace_back (i, e);
     }
 
-    for (auto& node : t.nodes) {
-        auto& e = node.edges;
-        sort (e.begin (), e.end (), less< pair< size_t, size_t > > { });
+    t.nodes [ROOT].link = AUX;
+    t.nodes [AUX].link = ROOT;
+
+    size_t s = ROOT;
+
+    for (int k = 0, i = 0; i < int (t.text.size ()); ++i) {
+        tie (s, k) = update (t, s, { k, i });
+        tie (s, k) = canonize (t, s, { k, i });
     }
 
     return t;
-}
-
-////////////////////////////////////////////////////////////////////////
-
-size_t
-count_leaves (const suffix_tree_t& t, size_t n) {
-    const auto& s = t.nodes [n].edges;
-
-    return accumulate (
-        s.begin (), s.end (), 0U,
-        [&](const auto& accum, const auto& arg) {
-            const auto& edge = t.edges [arg.second];
-            return accum + edge.end ? count_leaves (t, edge.end) : 1;
-        });
-}
-
-size_t
-count_leaves (const suffix_tree_t& t) {
-    return count_leaves (t, 0);
-}
-
-vector< size_t >
-count_all_leaves (const suffix_tree_t& t) {
-    vector< size_t > v (t.nodes.size (), { });
-
-    stack< tuple< size_t, size_t, size_t > > state;
-    size_t i = 0, j = 0, k = 0;
-
-    while (1) {
-        while (j < t.nodes [i].edges.size ()) {
-
-            const auto& node = t.nodes [i];
-            const auto& edge = t.edges [node.edges [j].second];
-
-            if (edge.end) {
-                state.emplace (i, j, k);
-
-                i = edge.end;
-                j = k = 0;
-
-                continue;
-            }
-            else
-                ++k;
-
-            ++j;
-        }
-
-        v [i] = k;
-
-        if (state.empty ())
-            break;
-
-        const size_t save = k;
-
-        tie (i, j, k) = state.top ();
-        state.pop ();
-
-        ++j;
-
-        k += save;
-    }
-
-    return v;
-}
-
-size_t
-count_distinct_factors (const suffix_tree_t& t) {
-    size_t n = 0;
-
-    for (const auto& node : t.nodes) {
-        for (const auto& p : node.edges) {
-            const auto& edge = t.edges [p.second];
-            assert (edge.len);
-
-            if (0 == edge.len)
-                continue;
-
-            if (0 == edge.end)
-                n += t.text.size () - edge.pos;
-            else
-                n += edge.len;
-        }
-    }
-
-    return n;
-}
-
-vector< pair< size_t, size_t > >
-distinct_factors (const suffix_tree_t& t) {
-    vector< pair< size_t, size_t > > v;
-
-    stack< tuple< size_t, size_t, size_t > > state;
-    state.emplace (0, 0, 0);
-
-    size_t i = 0, j = 0, len = 0;
-
-    while (!state.empty ()) {
-        while (j < t.nodes [i].edges.size ()) {
-            const auto& e = t.edges [t.nodes [i].edges [j].second];
-
-            len = get< 2 > (state.top ());
-            assert (e.pos >= len);
-
-            auto first = e.pos - len, last = (0 == e.end)
-                ? t.text.size () : e.pos + e.len;
-
-            for (size_t pos = e.pos + 1; pos <= last; ++pos)
-                v.emplace_back (first, pos - first);
-
-            if (0 == e.end)
-                ++j;
-            else {
-                state.emplace (i, j, last - first);
-
-                i = e.end;
-                j = 0;
-            }
-        }
-
-        tie (i, j, len) = state.top ();
-        state.pop ();
-
-        ++j;
-    }
-
-    return v;
-}
-
-vector< size_t >
-match (const suffix_tree_t& t, const string& s) {
-    vector< size_t > path;
-
-    size_t pos = 0;
-
-    for (auto iter = s.begin (), last = s.end (); iter != last;) {
-        //
-        // Record node path:
-        //
-        path.emplace_back (pos);
-
-        //
-        // Find the matching edge:
-        //
-        const auto result = edge_index (t.nodes [pos], *iter);
-
-        if (!result.second) {
-            path.clear ();
-            break;
-        }
-
-        //
-        // Match alongside the edge:
-        //
-        const auto& edge = t.edges [result.first];
-
-        auto iter2 = t.text.begin ();
-        advance (iter2, edge.pos);
-
-        auto last2 = iter2;
-
-        if (edge.end)
-            advance (last2, edge.len);
-        else
-            last2 = t.text.end ();
-
-        for (; iter != last && iter2 != last2 && *iter == *iter2;
-             ++iter, ++iter2) ;
-
-        if (iter == last) {
-            //
-            // Matched the whole string:
-            //
-            path.emplace_back (edge.end);
-        }
-        else {
-            if (iter2 == last2) {
-                //
-                // Matched the whole edge:
-                //
-                if (edge.end) {
-                    //
-                    // Continue from the end of the edge:
-                    //
-                    pos = edge.end;
-                }
-                else {
-                    //
-                    // Mismatch, the tree ends here:
-                    //
-                    path.clear ();
-                    break;
-                }
-            }
-            else {
-                //
-                // Mismatch on the current edge:
-                //
-                path.clear ();
-                break;
-            }
-        }
-    }
-
-    return path;
-}
-
-////////////////////////////////////////////////////////////////////////
-
-/* static */ string
-dot_graph_t::make_dot (const suffix_tree_t& t) {
-    stringstream ss;
-
-    ss << "#+BEGIN_SRC dot :file suffix-t.png :cmdline -Kdot -Tpng\n";
-    ss << "digraph suffix_tree {\n";
-
-    for (size_t i = 0; i < t.nodes.size (); ++i) {
-        ss << "    " << i;
-        if (0 == i)
-            ss << "[shape=square]";
-        ss << ";\n";
-    }
-
-    size_t leaf = t.nodes.size ();
-    vector< size_t > leaves;
-
-    for (const auto& node : t.nodes)
-        for (const auto& p : node.edges) {
-            const auto& edge = t.edges [p.second];
-
-            ss << "    " << edge.beg << " -> ";
-
-            if (0 == edge.end) {
-                ss << leaf;
-                leaves.push_back (leaf++);
-            }
-            else
-                ss << edge.end;
-
-            ss << " [label=\""
-               << t.text.substr (edge.pos, edge.len)
-               << "\"];";
-
-            ss << "// " << edge.pos << ", " << edge.len
-               << "\n";
-        }
-
-    for (auto leaf : leaves) {
-        ss << "    " << leaf << "[shape=point];\n";
-    }
-
-    ss << "}\n";
-    ss << "#+END_SRC\n\n";
-
-    return ss.str ();
 }
