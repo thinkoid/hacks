@@ -5,7 +5,6 @@ SUBDIRS =                                       \
     suffix-array                                \
     aho-corasick                                \
     cluster                                     \
-    count-occurrences                           \
     cyclic-rotation                             \
     cyclic-substring                            \
     knuth-morris-pratt                          \
@@ -18,7 +17,6 @@ SUBDIRS =                                       \
     manacher                                    \
     perf                                        \
     reduced-string                              \
-    string-function                             \
     tandem-arrays                               \
     two-characters
 

@@ -17,6 +17,6 @@ struct suffix_array_t {
 };
 
 suffix_array_t
-make_suffix_array (const suffix_tree_t&);
+make_suffix_array (const string&);
 
 #endif // HACKS_SUFFIX_ARRAY_HPP

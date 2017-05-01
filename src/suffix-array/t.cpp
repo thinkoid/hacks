@@ -18,8 +18,7 @@ int main () {
     string s;
     cin >> s;
 
-    const auto t = make_suffix_tree (s);
-    const auto a = make_suffix_array (t);
+    const auto a = make_suffix_array (s);
 
     for (size_t i = 0; i < a.arr.size (); ++i) {
         cout << setw (4) << int (a.lcp [i]) << " : "
