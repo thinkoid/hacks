@@ -99,7 +99,6 @@ struct alphabet_base_t {
     using typename base_type::char_type;        \
     using typename base_type::int_type;         \
     using typename base_type::off_type;         \
-    using typename base_type::pos_type;         \
     using typename base_type::size_type
 
 template< typename T, typename U = char_traits< T > >
