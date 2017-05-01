@@ -62,22 +62,36 @@ has_transition (const node_type& node, int c) {
 
 static inline bool
 has_transition (const suffix_tree_t& t, size_t s, int c) {
-    const auto& node = node_at (t, s);
-    return has_transition (node, c);
+    //
+    // Special case for the transitions out of the auxilliary state, saving
+    // the creation of a bunch of edges:
+    //
+    return AUX == s || has_transition (node_at (t, s), c);
 }
 
 static inline tuple< size_t, int, int, size_t >
 g_ (const suffix_tree_t& t, size_t s, int c) {
-    auto& edges = node_at (t, s).edges;
+    size_t s_ = 1, k = 0, p = 0;
 
-    const auto iter = find_if (
-        edges.begin (), edges.end (), [&](const auto& arg) {
-            return c == arg.first;
-        });
+    if (AUX != s) {
+        //
+        // Special case for the transitions out of the auxilliary state, saving
+        // the creation of a bunch of edges:
+        //
+        auto& edges = node_at (t, s).edges;
 
-    assert (iter != edges.end ());
+        const auto iter = find_if (
+            edges.begin (), edges.end (), [&](const auto& arg) {
+                return c == arg.first;
+            });
 
-    return tuple< size_t, int, int, size_t > (t.edges [iter->second]);
+        assert (iter != edges.end ());
+
+        tie (s, k, p, s_) = tuple< size_t, int, int, size_t > (
+            t.edges [iter->second]);
+    }
+
+    return tie (s, k, p, s_);
 }
 
 static size_t&
@@ -237,12 +251,6 @@ update (suffix_tree_t& t, size_t s, tuple_n< int, 2 > ref) {
 suffix_tree_t
 make_suffix_tree (const string& text) {
     suffix_tree_t t { text + "~", vector< node_type > (2U), { } };
-
-    for (int i = 0; i < (numeric_limits< char >::max) (); ++i) {
-        const auto e = t.edges.size ();
-        t.edges.emplace_back (edge_type { AUX, ROOT, 0, 0 });
-        t.nodes [AUX].edges.emplace_back (i, e);
-    }
 
     t.nodes [ROOT].link = AUX;
     t.nodes [AUX].link = ROOT;
