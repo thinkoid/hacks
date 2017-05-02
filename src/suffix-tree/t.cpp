@@ -23,8 +23,11 @@ const vector< string > test_data {
     "ABCABCABCABCABCABCABCABC",
     "ABCATBC",
     "ABCABCABTCABC",
-    "ABCABCABCABCABCABTCABCABC"
+    "ABCABCABCABCABCABTCABCABC",
+    "ABCABDABXYABCABDABXZABCABDABXWSABCABDABXYABCABD"
+    "ABXZABCABDABXWTABCABDABXYABCABDABXZABCABDABXWU"
 };
+
 
 #if 0
 
@@ -51,7 +54,7 @@ BM_tree_construction (benchmark::State& state) {
     state.SetLabel (make_label (s));
 
     while (state.KeepRunning ())
-        benchmark::DoNotOptimize (make_suffix_tree (s));
+        benchmark::DoNotOptimize (make_suffix_tree< > (s));
 }
 
 BENCHMARK (BM_tree_construction)->DenseRange (0, test_data.size () - 1);
@@ -60,10 +63,9 @@ BENCHMARK_MAIN ();
 
 #else
 
-////////////////////////////////////////////////////////////////////////
-
 struct dot_graph_t {
-    explicit dot_graph_t (const suffix_tree_t& t)
+    template< typename T, typename U >
+    explicit dot_graph_t (const suffix_tree_t< T, U >& t)
         : value_ (make_dot (t))
         { }
 
@@ -72,25 +74,32 @@ struct dot_graph_t {
     }
 
 private:
+    template< typename T, typename U >
     static string
-    make_dot (const suffix_tree_t& t) {
+    make_dot (const suffix_tree_t< T, U >& t) {
         stringstream ss;
 
         ss << "#+BEGIN_SRC dot :file t.png :cmdline -Kdot -Tpng\n";
         ss << "digraph g {\n";
 
-        for (size_t i = 1; i < t.nodes.size (); ++i)
-            ss << "    " << i << ";\n";
+        auto first = t.nodes.size (), last = first;
 
-        for (size_t i = 1; i < t.nodes.size (); ++i) {
-            for (size_t j = 0; j < t.nodes [i].edges.size (); ++j) {
-                const auto& e = t.edges [t.nodes [i].edges [j].second];
+        for (const auto& e : t.edges) {
+            size_t s, s_;
+            int k, p;
 
-                ss << "    " << e.s << " -> " << e.s_
-                   << " [label=\"" << t.text.substr (e.k, e.p - e.k + 1)
-                   << "\"];\n";
-            }
+            tie (s, k, p, s_) = e;
+
+            if (0 == s)
+                continue;
+
+            ss << "    " << s << " -> " << (0 == s_ ? last++ : s_) << " [label=\""
+               << t.text.substr (k, p - k + 1)
+               << "\"];\n";
         }
+
+        for (; first != last; ++first)
+            ss << "    " << first << " [shape=point];\n";
 
         ss << "}\n";
         ss << "#+END_SRC\n\n";
@@ -103,7 +112,7 @@ private:
 };
 
 int main (int, char** argv) {
-    const auto t = make_suffix_tree (argv [1]);
+    const auto t = make_suffix_tree< > (argv [1]);
     cout << dot_graph_t (t).value () << endl;
     return 0;
 }

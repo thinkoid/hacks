@@ -9,28 +9,73 @@
 
 #include <hacks/defs.hpp>
 
+template< typename CharT, typename TraitsT = char_traits< CharT > >
 struct suffix_tree_t {
-    struct edge_t {
-        operator tuple< size_t, int, int, size_t > () const {
-            return { s, k, p, s_ };
-        }
+    using traits_type = TraitsT;
 
-        size_t s, s_;
-        int k, p;
-    };
+    using char_type = typename traits_type::char_type;
+    using  int_type = typename traits_type::int_type;
+    using  pos_type = typename traits_type::pos_type;
 
-    struct node_t {
-        size_t link;
-        vector< pair< int, size_t > > edges;
-    };
+    using size_type = size_t;
 
-    string text;
+    using string_type = basic_string< char_type, traits_type >;
+    string_type text;
 
-    vector< node_t > nodes;
-    vector< edge_t > edges;
+    //
+    // 0: link, 1: transition set index
+    //
+    using node_type = tuple< size_type, size_type >;
+    vector< node_type > nodes;
+
+    //
+    // 0: transition character, 1: edge index
+    //
+    using transition_type = tuple< int_type, size_type >;
+    vector< vector< transition_type > > transitions;
+
+    //
+    // 0: s, 1: k, 2: p, 3: s'
+    //
+    using edge_type = tuple< size_t, int_type, int_type, size_type >;
+    vector< edge_type > edges;
+
+    static constexpr size_type aux = 0, root = 1;
 };
 
-suffix_tree_t
-make_suffix_tree (const string&);
+template< typename T, typename U >
+/* static */ constexpr typename suffix_tree_t< T, U >::size_type
+suffix_tree_t< T, U >::aux;
+
+template< typename T, typename U >
+/* static */ constexpr typename suffix_tree_t< T, U >::size_type
+suffix_tree_t< T, U >::root;
+
+////////////////////////////////////////////////////////////////////////
+
+#include <hacks/suffix-tree.cc>
+
+template< typename T = char, typename U = char_traits< T > >
+suffix_tree_t< T, U >
+make_suffix_tree (const typename suffix_tree_t< T, U >::string_type& text) {
+    using tree_type = suffix_tree_t< T, U >;
+    using size_type = typename tree_type::size_type;
+
+    tree_type t {
+        text + T ('~'),
+        { { tree_type::root, 1 }, { tree_type::aux, 0 } },
+        { { }, { { -1, 0 } } },
+        { { tree_type::aux, 0, 0, tree_type::root } }
+    };
+
+    size_type s = tree_type::root;
+
+    for (int k = 0, i = 0; i < int (t.text.size ()); ++i) {
+        tie (s, k) = suffix_tree_detail::update   (t, s, { k, i });
+        tie (s, k) = suffix_tree_detail::canonize (t, s, { k, i });
+    }
+
+    return t;
+}
 
 #endif // HACKS_SUFFIX_TREE_HPP
