@@ -15,7 +15,7 @@ SUBDIRS =                                       \
     lrf                                         \
     make-anagram                                \
     manacher                                    \
-    perf                                        \
+	perf                                        \
     reduced-string                              \
     tandem-arrays                               \
     two-characters

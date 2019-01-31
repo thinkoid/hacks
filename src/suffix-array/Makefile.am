@@ -8,4 +8,4 @@ libsuffix_array_a_SOURCES = suffix-array.cpp
 bin_PROGRAMS = t
 
 t_SOURCES = t.cpp
-t_LDADD = $(top_srcdir)/src/suffix-array/libsuffix-array.a
+t_LDADD = libsuffix-array.a
