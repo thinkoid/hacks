@@ -15,6 +15,7 @@ SUBDIRS =                                       \
     lrf                                         \
     make-anagram                                \
     manacher                                    \
+	maximum-palindromes                         \
 	perf                                        \
     reduced-string                              \
     tandem-arrays                               \
