@@ -12,7 +12,7 @@
 #include <type_traits>
 #include <experimental/type_traits>
 
-#include <hacks/knuth-morris-pratt.hpp>
+#include <hacks/knuth-morris-pratt.hh>
 
 using namespace std;
 

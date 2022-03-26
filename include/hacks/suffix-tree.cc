@@ -2,7 +2,7 @@
 
 #include <limits>
 
-#include <hacks/suffix-tree.hpp>
+#include <hacks/suffix-tree.hh>
 
 //
 // E. Ukkonen: Constructing suffix trees on-line in linear time.

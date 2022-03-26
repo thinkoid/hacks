@@ -8,7 +8,7 @@
 #include <vector>
 #include <string>
 
-#include <hacks/knuth-morris-pratt.hpp>
+#include <hacks/knuth-morris-pratt.hh>
 
 using namespace std;
 

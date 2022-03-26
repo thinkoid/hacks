@@ -9,8 +9,8 @@
 
 using namespace std;
 
-#include <hacks/suffix-tree.hpp>
-#include <hacks/suffix-array.hpp>
+#include <hacks/suffix-tree.hh>
+#include <hacks/suffix-array.hh>
 
 static const size_t npos = size_t (-1);
 

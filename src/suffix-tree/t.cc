@@ -10,7 +10,7 @@
 
 using namespace std;
 
-#include <hacks/suffix-tree.hpp>
+#include <hacks/suffix-tree.hh>
 
 const vector< string > test_data {
     "A",

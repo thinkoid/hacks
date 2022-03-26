@@ -1,9 +1,9 @@
 // -*- mode: c++ -*-
 
-#ifndef HACKS_ALPHABET_HPP
-#define HACKS_ALPHABET_HPP
+#ifndef HACKS_ALPHABET_HH
+#define HACKS_ALPHABET_HH
 
-#include <hacks/defs.hpp>
+#include <hacks/defs.hh>
 
 using namespace std;
 
@@ -227,4 +227,4 @@ struct printable_ascii_alphabet_t : alphabet_base_t< T, U, ' ', '~', 95U > {
 
 #undef HACKS_BASE_TYPEDEFS
 
-#endif // HACKS_ALPHABET_HPP
+#endif // HACKS_ALPHABET_HH

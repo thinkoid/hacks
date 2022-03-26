@@ -1,9 +1,9 @@
 // -*- mode: c++ -*-
 
-#ifndef HACKS_KMP_HPP
-#define HACKS_KMP_HPP
+#ifndef HACKS_KMP_HH
+#define HACKS_KMP_HH
 
-#include <hacks/defs.hpp>
+#include <hacks/defs.hh>
 
 #include <vector>
 
@@ -84,4 +84,4 @@ private:
     std::vector< int > table_;
 };
 
-#endif // HACKS_KMP_HPP
+#endif // HACKS_KMP_HH

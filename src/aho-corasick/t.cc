@@ -11,7 +11,7 @@
 
 using namespace std;
 
-#include <hacks/aho-corasick.hpp>
+#include <hacks/aho-corasick.hh>
 
 #if 0
 

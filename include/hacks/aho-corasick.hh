@@ -1,10 +1,10 @@
 // -*- mode: c++ -*-
 
-#ifndef HACKS_AHO_CORASICK_HPP
-#define HACKS_AHO_CORASICK_HPP
+#ifndef HACKS_AHO_CORASICK_HH
+#define HACKS_AHO_CORASICK_HH
 
-#include <hacks/defs.hpp>
-#include <hacks/alphabet.hpp>
+#include <hacks/defs.hh>
+#include <hacks/alphabet.hh>
 
 #include <iterator>
 #include <map>
@@ -188,4 +188,4 @@ template< typename T >
 /* static */ constexpr typename aho_corasick_t< T >::size_type
 aho_corasick_t< T >::npos /* = size_type (-1) */;
 
-#endif // HACKS_AHO_CORASICK_HPP
+#endif // HACKS_AHO_CORASICK_HH

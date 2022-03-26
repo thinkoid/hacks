@@ -1,13 +1,13 @@
 // -*- mode: c++ -*-
 
-#ifndef HACKS_SUFFIX_TREE_HPP
-#define HACKS_SUFFIX_TREE_HPP
+#ifndef HACKS_SUFFIX_TREE_HH
+#define HACKS_SUFFIX_TREE_HH
 
 #include <iostream>
 #include <vector>
 #include <tuple>
 
-#include <hacks/defs.hpp>
+#include <hacks/defs.hh>
 
 template< typename CharT, typename TraitsT = char_traits< CharT > >
 struct suffix_tree_t {
@@ -78,4 +78,4 @@ make_suffix_tree (const typename suffix_tree_t< T, U >::string_type& text) {
     return t;
 }
 
-#endif // HACKS_SUFFIX_TREE_HPP
+#endif // HACKS_SUFFIX_TREE_HH
