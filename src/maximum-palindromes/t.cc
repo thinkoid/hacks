@@ -10,6 +10,25 @@
 
 #define M_ 1000000007L
 
+static const long N_ = 100001;
+static long inverses [N_], factorials [N_], factorial_inverses [N_];
+
+static void precalculate () {
+    inverses [0] = 0;
+    inverses [1] = 1;
+
+    factorials [0] = factorials [1] = 1;
+
+    factorial_inverses [0] = 1;
+    factorial_inverses [1] = 1;
+
+    for (int i = 2; i < N_; ++i) {
+        inverses [i] = inverses [M_ % i] * (M_ - M_ / i) % M_;
+        factorials [i] = factorials [i - 1] * i % M_;
+        factorial_inverses [i] = factorial_inverses [i - 1] * inverses [i] % M_;
+    }
+}
+
 inline long inv (long a, long m = M_) {
     long s = 0, s_ = 1;
     long r = m, r_ = a;
