@@ -8,124 +8,87 @@
 #include <string>
 #include <vector>
 
-#define M_ 1000000007L
+const long M = 1000000007L;
+const long N = 100000L;
 
-static const long N_ = 100001;
-static long inverses [N_], factorials [N_], factorial_inverses [N_];
+static std::vector< long > inverses(N), factorials(N), factorial_inverses(N);
+static std::vector< int > sieve;
 
-static void precalculate () {
-    inverses [0] = 0;
-    inverses [1] = 1;
+static void precalculate_factorials()
+{
+    inverses[0] = 0;
+    inverses[1] = 1;
 
-    factorials [0] = factorials [1] = 1;
+    factorials[0] = factorials[1] = 1;
 
-    factorial_inverses [0] = 1;
-    factorial_inverses [1] = 1;
+    factorial_inverses[0] = 1;
+    factorial_inverses[1] = 1;
 
-    for (int i = 2; i < N_; ++i) {
-        inverses [i] = inverses [M_ % i] * (M_ - M_ / i) % M_;
-        factorials [i] = factorials [i - 1] * i % M_;
-        factorial_inverses [i] = factorial_inverses [i - 1] * inverses [i] % M_;
+    for(int i = 2; i < N; ++i) {
+        inverses[i] = inverses[M % i] *(M - M / i) % M;
+        factorials[i] = factorials[i - 1] * i % M;
+        factorial_inverses[i] = factorial_inverses[i - 1] * inverses[i] % M;
     }
 }
 
-inline long inv (long a, long m = M_) {
-    long s = 0, s_ = 1;
-    long r = m, r_ = a;
+static void precalculate_sieve(const std::string &s)
+{
+    sieve.resize((s.size() + 1) * 32U);
+    
+    const int *prev = sieve.data();
+    int *ptr = sieve.data() + 32U;
 
-    while (r) {
-        long q = r_ / r;
+    for (int c : s) {
+        std::copy(prev, prev + 32U, ptr);
 
-        {
-            long prev = r;
-            r = r_ - q * r;
-            r_ = prev;
-        }
+        ++ptr[c - 'a'];
 
-        {
-            long prev = s;
-            s = s_ - q * s;
-            s_ = prev;
-        }
+        prev += 32U;
+        ptr  += 32U;
     }
-
-    if (s_ < 0)
-        s_ += m;
-
-    return s_;
 }
 
-static inline long add (long a, long b, long m = M_) {
-    return { ((a % m) + (b % m)) % m };
-}
-
-static inline long sub (long a, long b, long m = M_) {
-    return { ((a % m) - (b % m)) % m };
-}
-
-static inline long mul (long a, long b, long m = M_) {
-    return { ((a % m) * (b % m)) % m };
-}
-
-static inline long div_ (long a, long b, long m = M_) {
-    return mul (a, inv (b), m);
-}
-
-static inline long factorial (long value, long m = M_) {
-    long result{ 1 };
-
-    for (long i{ 1 }; i <= value; ++i)
-        result = mul (result, i, m);
-
-    return result;
-}
-
-template< typename Iterator >
-long maximum_palindrome (Iterator iter, Iterator last) {
-    int arr [256] = { 0 };
-
-    for (; iter != last; ++iter) {
-        unsigned char c = *iter;
-        ++arr [c];
-    }
-
-    std::sort (arr, arr + sizeof arr / sizeof *arr, std::greater< int > ());
-
-    int count = 0, odds = 0;
-    long denominator = 1;
-
-    for (auto x : arr) {
-        if (0 == x)
-            break;
-
-        count += x/2;
-
-        if (x % 2)
-            ++odds;
-
-        denominator = mul (denominator, factorial (x/2));
-    }
-
-    if (odds == 0)
-        odds = 1;
-
-    return div_ (mul (factorial (count), odds), denominator);
-}
-
-static int
-maximum_palindrome (const std::string& s, long l, long r) {
-    return maximum_palindrome (s.begin () + l - 1, s.begin () + r);
-}
-
-int main () {
+int main()
+{
     std::string s;
     std::cin >> s;
 
     long l, r, ignore;
     std::cin >> ignore;
 
-    while (std::cin >> l >> r) {
-        std::cout << maximum_palindrome (s, l, r) << "\n";
+    precalculate_factorials();
+    precalculate_sieve(s);
+
+    std::vector< int > xs(32U);
+
+    while(std::cin >> l >> r) {
+        {
+            const int *beg = sieve.data() + (l -1) * 32U;
+            const int *end = sieve.data() + r * 32U;
+
+            for (size_t i = 0; i < 32U; ++i) {
+                xs[i] = end[i] - beg[i];
+            }
+        }
+
+        int count = 0, odds = 0;
+
+        for(auto x : xs) {
+            count += x / 2;
+            odds  += x & 1;
+        }
+
+        if(odds == 0)
+            odds = 1;
+
+        long numerator = ((factorials[count] % M) * (odds % M)) % M;
+    
+        for(auto x : xs) {
+            if(x)
+                numerator = ((numerator % M) * (factorial_inverses[x/2] % M)) % M;
+        }
+
+        std::cout << numerator << "\n";
     }
 
     return 0;
