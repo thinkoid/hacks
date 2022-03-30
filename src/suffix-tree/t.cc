@@ -8,11 +8,9 @@
 #include <string>
 #include <vector>
 
-using namespace std;
-
 #include <hacks/suffix-tree.hh>
 
-const vector< string > test_data {
+const std::vector< std::string > test_data {
     "A",
     "AA",
     "AAA",
@@ -33,9 +31,9 @@ const vector< string > test_data {
 
 #include <benchmark/benchmark.h>
 
-static string
-make_label (const string& s) {
-    stringstream ss;
+static std::string
+make_label (const std::string& s) {
+    std::stringstream ss;
 
     if (s.size () > 6) {
         ss << s.substr (0, 6) << "...";
@@ -49,7 +47,7 @@ make_label (const string& s) {
 
 static void
 BM_tree_construction (benchmark::State& state) {
-    const string s = test_data [state.range (0)] + "$";
+    const std::string s = test_data [state.range (0)] + "$";
 
     state.SetLabel (make_label (s));
 
@@ -69,15 +67,15 @@ struct dot_graph_t {
         : value_ (make_dot (t))
         { }
 
-    const string& value () const {
+    const std::string& value () const {
         return value_;
     }
 
 private:
     template< typename T, typename U >
-    static string
+    static std::string
     make_dot (const suffix_tree_t< T, U >& t) {
-        stringstream ss;
+        std::stringstream ss;
 
         ss << "#+BEGIN_SRC dot :file t.png :cmdline -Kdot -Tpng\n";
         ss << "digraph g {\n";
@@ -88,7 +86,7 @@ private:
             size_t s, s_;
             int k, p;
 
-            tie (s, k, p, s_) = e;
+            std::tie (s, k, p, s_) = e;
 
             if (0 == s)
                 continue;
@@ -108,12 +106,12 @@ private:
     }
 
 private:
-    string value_;
+    std::string value_;
 };
 
 int main (int, char** argv) {
     const auto t = make_suffix_tree< > (argv [1]);
-    cout << dot_graph_t (t).value () << endl;
+    std::cout << dot_graph_t (t).value () << std::endl;
     return 0;
 }
 

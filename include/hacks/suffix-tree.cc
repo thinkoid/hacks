@@ -47,7 +47,7 @@ has_transition (const suffix_tree_t< T, U >& t, size_t s, int c) {
 
     if (!b) {
         size_type ignore, i;
-        tie (ignore, i) = t.nodes [s];
+        std::tie (ignore, i) = t.nodes [s];
 
         if (i && i < t.transitions.size ()) {
             const auto& ts = t.transitions [i];
@@ -85,7 +85,7 @@ make_transitions (suffix_tree_t< T, U >& t, size_t s) {
 }
 
 template< typename T, typename U >
-tuple< size_t, int, int, size_t >
+std::tuple< size_t, int, int, size_t >
 g_ (const suffix_tree_t< T, U >& t, size_t s, int c) {
     using tree_type = suffix_tree_t< T, U >;
 
@@ -101,7 +101,7 @@ g_ (const suffix_tree_t< T, U >& t, size_t s, int c) {
         // state:
         //
         size_type ignore, i;
-        tie (ignore, i) = t.nodes [s];
+        std::tie (ignore, i) = t.nodes [s];
 
         assert (i && i < t.transitions.size ());
         const auto& ts = t.transitions [i];
@@ -117,10 +117,10 @@ g_ (const suffix_tree_t< T, U >& t, size_t s, int c) {
         const auto e = get<1> (*iter);
         assert (e < t.edges.size ());
 
-        tie (s, k, p, s_) = t.edges [e];
+        std::tie (s, k, p, s_) = t.edges [e];
     }
 
-    return tie (s, k, p, s_);
+    return std::tie (s, k, p, s_);
 }
 
 //
@@ -130,7 +130,7 @@ g_ (const suffix_tree_t< T, U >& t, size_t s, int c) {
 //
 template< typename T, typename U >
 typename suffix_tree_t< T, U >::size_type&
-g_ (suffix_tree_t< T, U >& t, size_t s, tuple< int, int > ref) {
+g_ (suffix_tree_t< T, U >& t, size_t s, std::tuple< int, int > ref) {
     using tree_type = suffix_tree_t< T, U >;
 
     using size_type = typename tree_type::size_type;
@@ -139,10 +139,10 @@ g_ (suffix_tree_t< T, U >& t, size_t s, tuple< int, int > ref) {
     using edge_type = typename tree_type::edge_type;
 
     int_type k = 0, p = 0;
-    tie (k, p) = ref;
+    std::tie (k, p) = ref;
 
     size_type ignore, i, *s_ = 0;
-    tie (ignore, i) = t.nodes [s];
+    std::tie (ignore, i) = t.nodes [s];
 
     if (0 == i) {
         //
@@ -193,8 +193,8 @@ g_ (suffix_tree_t< T, U >& t, size_t s, tuple< int, int > ref) {
 //
 
 template< typename T, typename U >
-tuple< size_t, int >
-canonize (const suffix_tree_t< T, U >& t, size_t s, tuple< int, int > ref) {
+std::tuple< size_t, int >
+canonize (const suffix_tree_t< T, U >& t, size_t s, std::tuple< int, int > ref) {
     using tree_type = suffix_tree_t< T, U >;
 
     using size_type = typename tree_type::size_type;
@@ -203,13 +203,13 @@ canonize (const suffix_tree_t< T, U >& t, size_t s, tuple< int, int > ref) {
     size_type s_, ignore;
     int_type k, p, k_, p_;
 
-    tie (k, p) = ref;
+    std::tie (k, p) = ref;
     assert (k >= 0);
 
     if (k <= p) {
         const auto tk = t.text [k];
 
-        tie (ignore, k_, p_, s_) = g_ (t, s, tk);
+        std::tie (ignore, k_, p_, s_) = g_ (t, s, tk);
         assert (k_ >= 0);
 
         while (p_ - k_ <= p - k) {
@@ -219,7 +219,7 @@ canonize (const suffix_tree_t< T, U >& t, size_t s, tuple< int, int > ref) {
             if (k <= p) {
                 const auto tk = t.text [k];
 
-                tie (ignore, k_, p_, s_) = g_ (t, s, tk);
+                std::tie (ignore, k_, p_, s_) = g_ (t, s, tk);
                 assert (k_ >= 0);
             }
         }
@@ -229,9 +229,9 @@ canonize (const suffix_tree_t< T, U >& t, size_t s, tuple< int, int > ref) {
 }
 
 template< typename T, typename U >
-tuple< size_t, bool >
+std::tuple< size_t, bool >
 test_and_split (
-    suffix_tree_t< T, U >& t, size_t s, tuple< int, int > ref, int c) {
+    suffix_tree_t< T, U >& t, size_t s, std::tuple< int, int > ref, int c) {
     using tree_type = suffix_tree_t< T, U >;
 
     using size_type = typename tree_type::size_type;
@@ -242,7 +242,7 @@ test_and_split (
     size_type s_, ignore;
     int_type k, p, k_, p_;
 
-    tie (k, p) = ref;
+    std::tie (k, p) = ref;
     assert (k >= 0);
 
     if (k <= p) {
@@ -251,7 +251,7 @@ test_and_split (
         //
         // Find tk-transition g'(s,(k',p'))=s':
         //
-        tie (ignore, k_, p_, s_) = g_ (t, s, tk);
+        std::tie (ignore, k_, p_, s_) = g_ (t, s, tk);
         assert (k_ >= 0);
 
         if (c == t.text [k_ + p - k + 1])
@@ -279,8 +279,8 @@ test_and_split (
 }
 
 template< typename T, typename U >
-tuple< size_t, int >
-update (suffix_tree_t< T, U >& t, size_t s, tuple< int, int > ref) {
+std::tuple< size_t, int >
+update (suffix_tree_t< T, U >& t, size_t s, std::tuple< int, int > ref) {
     using tree_type = suffix_tree_t< T, U >;
 
     using size_type = typename tree_type::size_type;
@@ -288,7 +288,7 @@ update (suffix_tree_t< T, U >& t, size_t s, tuple< int, int > ref) {
 
     int_type k, i;
 
-    tie (k, i) = ref;
+    std::tie (k, i) = ref;
     assert (k >= 0);
 
     const auto ti = t.text [i];
@@ -296,21 +296,21 @@ update (suffix_tree_t< T, U >& t, size_t s, tuple< int, int > ref) {
     bool b;
     size_type oldr = tree_type::root, r = 0;
 
-    tie (r, b) = test_and_split (t, s, { k, i - 1 }, ti);
+    std::tie (r, b) = test_and_split (t, s, { k, i - 1 }, ti);
 
     while (!b) {
         //
         // Create new transition g'(r,(i,∞))=r'
         //
-        g_ (t, r, { i, (numeric_limits< int_type >::max) () });
+        g_ (t, r, { i, (std::numeric_limits< int_type >::max) () });
 
         if (oldr != tree_type::root)
             link (t, oldr) = r;
 
         oldr = r;
 
-        tie (s, k) = canonize (t, link (t, s), { k, i - 1 });
-        tie (r, b) = test_and_split (t, s, { k, i - 1 }, t.text [i]);
+        std::tie (s, k) = canonize (t, link (t, s), { k, i - 1 });
+        std::tie (r, b) = test_and_split (t, s, { k, i - 1 }, t.text [i]);
     }
 
     if (oldr != tree_type::root)

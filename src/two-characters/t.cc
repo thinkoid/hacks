@@ -31,7 +31,7 @@ interleaved (Iterator iter1, Iterator last1,
     bool b = true;
 
     for (; b && iter1 != last1 && iter2 != last2; ) {
-        if (b = *iter1 < *iter2) {
+        if ((b = *iter1) < *iter2) {
             if (++iter1 != last1)
                 b = *iter2 < *iter1;
         }

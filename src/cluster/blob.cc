@@ -16,8 +16,8 @@ struct indexed_less {
     template< typename T >
     bool operator() (const T& lhs, const T& rhs) const {
         return
-            get< 0 > (lhs)  < get< 0 > (rhs) ||
-            get< 0 > (lhs) == get< 0 > (rhs) && get< 1 > (lhs) < get< 1 > (rhs);
+            (get< 0 > (lhs)  < get< 0 > (rhs)) ||
+            (get< 0 > (lhs) == get< 0 > (rhs) && get< 1 > (lhs) < get< 1 > (rhs));
     }
 };
 
